@@ -20,6 +20,10 @@
 
 > ⚠️ 手势需要摄像头权限，浏览器只在 **https 或 127.0.0.1 / localhost** 下才给——所以别直接双击 `file://` 打开，用上面的 Live Demo，或本地起 `tools/serve.ps1`。
 
+<p align="center">
+  <img src="demo.gif" width="100%" alt="演示：比耶把圣诞树散成爱心，指尖在 3D 空间里画一笔金色签名，再转着看" />
+</p>
+
 <p>
 <img src="01-tree.png" width="49%" alt="粒子圣诞树" />
 <img src="02-heart.png" width="49%" alt="爱心形态" />
@@ -109,6 +113,7 @@ christmas-tree-gesture/
 ├── SKILL.md                  # 技能包说明：能力、参数、二次开发接口
 ├── CONTRIBUTING.md           # 共建指南：怎么报 bug、怎么提 PR
 ├── LICENSE                   # MIT
+├── demo.gif                  # 12 秒手势演示：比耶变形态 + 指尖画签名
 ├── 01-tree.png ~ 04-ink-3d.png  # 截图
 ├── tools/serve.ps1           # Windows 本地静态服务
 ├── tools/打开本地预览.cmd
