@@ -1,6 +1,6 @@
-# Christmas Tree · 手势粒子圣诞树
+# Christmas Tree · 手势粒子圣诞树（hand gesture · single HTML file）
 
-> A single-file WebGL Christmas tree you can **conduct with your bare hands** — 26,000 particles you can tune live, six morphable shapes driven by **1–6 fingers**, 360° free rotation, photos floating as **particle planets** you can **pinch out of the sky**, and a **3D particle brush** that draws with your fingertip.
+> A single-file **christmas tree** built with **three.js** and tens of thousands of **particles**, controlled by **hand gesture** recognition through your **webcam** — powered by **mediapipe**, **no install**, one **single html file**: 26,000 particles you can tune live, six morphable shapes driven by **1–6 fingers**, 360° free rotation, photos floating as **particle planets** you can **pinch out of the sky**, and a **3D particle brush** that draws with your fingertip.
 
 一个 **单文件** 的圣诞粒子世界：不用任何外部素材、双击即开。伸 1 根手指变爱心、2 根变星星、3 根变雪花、4 根变花环、5 根变星云、6 根变 MERRY；握拳收回成树，捏合推拉镜头、还能把漂浮的照片星球"捏"下来拖着走；指尖落笔写字，画完转着看。
 
