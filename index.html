@@ -197,6 +197,14 @@ html,body{height:100%;overflow:hidden;background:#02040a;color:#eaf3ff;
   opacity:0;transition:opacity .22s;font-family:inherit}
 .ppItem:hover .ppDel{opacity:1}
 .ppDel:hover{background:rgba(170,32,52,.92);color:#fff}
+.ppHide{position:absolute;top:1px;left:1px;width:15px;height:15px;padding:0;border:none;border-radius:50%;
+  background:rgba(6,12,22,.85);color:#9fe8ff;font-size:9px;line-height:1;cursor:pointer;
+  opacity:0;transition:opacity .22s;font-family:inherit}
+.ppItem:hover .ppHide{opacity:1}
+.ppItem.off .ppHide{opacity:1;color:#ffcf87}
+.ppHide:hover{background:rgba(30,80,120,.92);color:#fff}
+.ppItem.off img{opacity:.34;filter:grayscale(.72)}
+.ppItem.off{border-color:rgba(255,207,135,.35)}
 .ppTip{margin-top:9px;font-size:9.5px;line-height:1.6;color:#6f89a8}
 
 /* ============================================================
@@ -434,13 +442,17 @@ body.clean #exitClean:hover{opacity:1;color:#ffe6b3}
   <input class="tpRange" id="rngSize" type="range" min="0.55" max="1.9" step="0.02" value="1">
   <div class="tpRow"><span>泛光强度</span><b id="vGlow">0.55</b></div>
   <input class="tpRange" id="rngGlow" type="range" min="0" max="1.4" step="0.02" value="0.55">
+  <div class="tpRow"><span>照片大小</span><b id="vPhotoSize">1.00</b></div>
+  <input class="tpRange" id="rngPhotoSize" type="range" min="0.45" max="1.9" step="0.02" value="1">
+  <div class="tpRow"><span>照片透明度</span><b id="vPhotoOpacity">0.92</b></div>
+  <input class="tpRange" id="rngPhotoOpacity" type="range" min="0.2" max="1" step="0.02" value="0.92">
   <button class="tpReset" id="tpReset">恢复默认</button>
 </div>
 
 <div id="photoPanel">
   <div class="ppHead"><b>PHOTOS <span id="ppCount">0</span>/10</b><button class="ppAdd" id="ppAdd" title="添加照片">＋</button></div>
   <div class="ppGrid" id="ppGrid"></div>
-  <div class="ppTip">🤏 捏合抓住照片可拖着走，松手归位；点缩略图看大图，× 删除。</div>
+  <div class="ppTip" id="ppTip">🤏 照片浮成星云球，捏合可抓住任意一颗；👁 隐藏 / × 删除 / 点缩略图看大图。</div>
 </div>
 
 <div id="camPanel">
@@ -471,11 +483,14 @@ body.clean #exitClean:hover{opacity:1;color:#ffe6b3}
       <li><s>2</s><span><b>两指比耶</b> · 五角星</span></li>
       <li><s>3</s><span><b>三指</b> · 雪花</span></li>
       <li><s>4</s><span><b>四指</b> · 花环</span></li>
-      <li><s>5</s><span><b>五指张开</b> · 星云</span></li>
-      <li><s>6</s><span><b>拇指+小指</b> · MERRY 文字</span></li>
-      <li><s>🤏</s><span><b>捏合</b> · 推拉镜头 / 抓住照片拖动</span></li>
+      <li><s>5</s><span><b>五指张开</b> · 星云（拇指要翘出来，别贴着手掌）</span></li>
+      <li><s>6</s><span><b>拇指+小指（沙卡）</b> · MERRY 文字</span></li>
+      <li><s>🤏</s><span><b>捏合</b> · 推拉镜头 / 抓住照片星球拖动</span></li>
       <li><s>✊</s><span><b>握拳</b> · 星尘收拢成树</span></li>
     </ul>
+    <p class="lede" style="font-size:11.5px;opacity:.72;margin-top:10px">
+      摄像头小窗会实时显示「指 11111 · 拇指 62°开」，识别不对时看一眼这串数字就知道是哪根手指的问题。
+    </p>
     <div class="row">
       <button class="btn-primary" id="btnStartCam">开启摄像头 · 手势互动</button>
       <button class="btn-ghost" id="btnStartMouse">仅用鼠标 / 触摸</button>
@@ -744,13 +759,22 @@ function buildTree(count) {
   const aKind = new Float32Array(n);
   const meta = { kind: new Uint8Array(n), t: new Float32Array(n), ci: new Uint8Array(n), seed: new Float32Array(n) };
 
-  // 装饰球中心
+  // —— 分层树形：7 层树冠，每层下沿微外张，剪影像真的圣诞树 ——
+  const TIERS = 7;
+  const envAt = h => {
+    const hh = clamp(h, 0, 0.9999) * TIERS;
+    const ti = Math.floor(hh), tl = hh - ti;
+    return R * (0.99 - (ti / TIERS) * 0.80) * (0.85 + 0.19 * (1 - tl));
+  };
+  const yAt = h => 0.4 + clamp(h, 0, 1) * H * 0.97;
+
+  // 装饰球：贴着树冠表面挂
   const orn = [];
-  for (let k = 0; k < 56; k++) {
-    const h = rand(0.04, 0.93);
-    const rad = R * Math.pow(1 - h, 0.88) * 0.9;
+  for (let k = 0; k < 84; k++) {
+    const h = rand(0.03, 0.95);
     const th = rand(0, Math.PI * 2);
-    orn.push({ x: Math.cos(th) * rad, y: h * H + 0.55, z: Math.sin(th) * rad, ci: k % 5 });
+    const rad = envAt(h) * rand(0.95, 1.03);
+    orn.push({ x: Math.cos(th) * rad, y: yAt(h) + rand(-0.12, 0.12), z: Math.sin(th) * rad, ci: k % 5 });
   }
 
   for (let i = 0; i < n; i++) {
@@ -759,67 +783,73 @@ function buildTree(count) {
     let x = 0, y = 0, z = 0;
     const roll = Math.random();
 
-    if (roll < 0.015) {
+    if (roll < 0.010) {
       // 树干
       kind = 4;
       const h = Math.random();
-      const rad = 0.58 * (0.35 + h * 0.3);
+      const rad = 0.55 * (0.35 + h * 0.3);
       const th = rand(0, Math.PI * 2);
       x = Math.cos(th) * rad; y = -1.55 + h * 2.3; z = Math.sin(th) * rad;
       size = rand(0.1, 0.2);
-    } else if (roll < 0.155) {
-      // 螺旋光带 —— 三道金线绕树
+    } else if (roll < 0.135) {
+      // 螺旋光带 —— 五道金线绕着分层树冠盘旋（贴表面，更醒目）
       kind = 1; t = Math.random();
-      const h = rand(0.008, 0.99);
-      const radMax = R * Math.pow(1 - h, 0.9);
-      const arms = 3;
-      const arm = Math.floor(Math.random() * arms);
-      const th = h * Math.PI * 2 * 12 + arm * Math.PI * 2 / arms + rand(-0.04, 0.04);
-      const rad = radMax * 0.955;
-      x = Math.cos(th) * rad; y = h * H + 0.45; z = Math.sin(th) * rad;
-      size = rand(0.19, 0.33);
-      t = 0.35 + h * 0.65;
-    } else if (roll < 0.21) {
+      const h = rand(0.008, 0.995);
+      const arm = Math.floor(Math.random() * 5);
+      const th = h * Math.PI * 2 * 5.2 + arm * Math.PI * 2 / 5 + rand(-0.05, 0.05);
+      const rad = envAt(h) * (1.01 + rand(-0.04, 0.035));
+      x = Math.cos(th) * rad; y = yAt(h) + rand(-0.03, 0.03); z = Math.sin(th) * rad;
+      size = rand(0.2, 0.4);
+      t = 0.3 + h * 0.7;
+    } else if (roll < 0.215) {
       // 彩灯球
       kind = 2;
       const c = orn[Math.floor(Math.random() * orn.length)];
       ci = c.ci;
       const u = Math.random(), v = Math.random();
       const th = u * Math.PI * 2, ph = Math.acos(2 * v - 1);
-      const rr = 0.2 * Math.pow(Math.random(), 0.45);
+      const rr = 0.17 * Math.pow(Math.random(), 0.45);
       x = c.x + Math.sin(ph) * Math.cos(th) * rr;
       y = c.y + Math.cos(ph) * rr;
       z = c.z + Math.sin(ph) * Math.sin(th) * rr;
-      size = rand(0.24, 0.42);
+      size = rand(0.22, 0.42);
       t = Math.random();
-    } else if (roll < 0.228) {
+    } else if (roll < 0.239) {
       // 树顶五角星（轮廓为主，内部稀疏）
       kind = 3;
       const ang = Math.random() * Math.PI * 2;
       const seg = Math.PI * 2 / 5;
       const loc = ang % seg;
       const edge = STAR_R * Math.cos(Math.PI / 5) / Math.cos(loc - Math.PI / 5);
-      const rr = (Math.random() < 0.55)
-        ? edge * (0.88 + Math.random() * 0.12)
+      const rr = (Math.random() < 0.7)
+        ? edge * (0.9 + Math.random() * 0.1)
         : edge * Math.pow(Math.random(), 0.85);
       x = Math.cos(ang) * rr;
       y = H + 0.66 + Math.sin(ang) * rr;
       z = rand(-0.16, 0.16);
-      size = rand(0.13, 0.26);
+      size = rand(0.085, 0.16);
       t = Math.random();
+    } else if (roll < 0.261) {
+      // 层沿光环：每层树冠下沿一圈亮边，让层次一眼可见
+      kind = 5; t = Math.random();
+      const k = 1 + Math.floor(Math.random() * TIERS);
+      const h = clamp(k / TIERS, 0, 0.992);
+      const th = rand(0, Math.PI * 2);
+      const rad = envAt(h) * (0.975 + rand(-0.02, 0.02));
+      x = Math.cos(th) * rad; y = yAt(h) + rand(-0.07, 0.07); z = Math.sin(th) * rad;
+      size = rand(0.11, 0.21);
     } else {
-      // 树冠
+      // 树冠：按层分布，外层密、里层疏，带旋转纹理
       kind = 0; t = Math.random();
-      const h = Math.random();
-      const radMax = R * Math.pow(1 - h, 0.87);
-      const layerN = 17;
-      const li = h * layerN - Math.floor(h * layerN);
-      const rad = radMax * (0.46 + 0.54 * Math.pow(Math.random(), 0.42)) * (1 - 0.2 * li);
-      const th = h * Math.PI * 2 * 9.5 + rand(0, Math.PI * 2 * 0.6);
+      const h = Math.pow(Math.random(), 0.82);
+      const env = envAt(h);
+      const u = Math.pow(Math.random(), 0.42);
+      const rad = env * (0.40 + 0.60 * u);
+      const th = h * Math.PI * 2 * 7.2 + rand(0, Math.PI * 2 * 0.8) + (1 - u) * 0.5;
       x = Math.cos(th) * rad;
-      y = 0.4 + h * H * 0.99 + rand(-0.12, 0.12);
+      y = yAt(h) + rand(-0.1, 0.1);
       z = Math.sin(th) * rad;
-      size = rand(0.085, 0.23);
+      size = rand(0.07, 0.17);
     }
 
     aTree[p] = x; aTree[p + 1] = y; aTree[p + 2] = z;
@@ -909,20 +939,20 @@ function buildTree(count) {
   // 树顶光晕
   const halo = new THREE.Sprite(new THREE.SpriteMaterial({
     map: starTex, color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending,
-    depthWrite: false, depthTest: false, opacity: 0.9
+    depthWrite: false, depthTest: false, opacity: 0.62
   }));
   halo.position.set(0, H + 0.5, 0);
-  halo.scale.set(3.4, 3.4, 1);
+  halo.scale.set(2.9, 2.9, 1);
   halo.renderOrder = 5;
   group.add(halo);
 
   // 清晰星形
   const starSprite = new THREE.Sprite(new THREE.SpriteMaterial({
     map: starShapeTex, transparent: true, blending: THREE.AdditiveBlending,
-    depthWrite: false, depthTest: false, opacity: 0.6
+    depthWrite: false, depthTest: false, opacity: 0.48
   }));
   starSprite.position.set(0, H + 0.5, 0.2);
-  starSprite.scale.set(2.9, 2.9, 1);
+  starSprite.scale.set(2.7, 2.7, 1);
   starSprite.renderOrder = 6;
   group.add(starSprite);
 
@@ -954,18 +984,22 @@ function paintTree() {
     let bright = 1;
     if (k === 0) {
       tmp.copy(c.foA).lerp(c.foB, t[i]);
-      bright = 0.18 + 0.2 * t[i];
-      if (seed[i] > 0.87) { tmp.lerp(c.foC, 0.72); bright = 0.36; }
-      else if (seed[i] < 0.1) bright = 0.06;
+      bright = 0.15 + 0.19 * t[i];
+      if (seed[i] > 0.93) { tmp.lerp(c.foC, 0.6); bright = 0.32; }
+      else if (seed[i] < 0.1) bright = 0.07;
     } else if (k === 1) {
       tmp.copy(c.bandB).lerp(c.band, Math.pow(t[i], 0.7));
-      bright = 0.4 + 0.26 * (1 - Math.abs(t[i] - 0.55) * 2);
+      bright = 0.32 + 0.18 * (1 - Math.abs(t[i] - 0.55) * 2);
     } else if (k === 2) {
       tmp.copy(c.orn[ci[i]]);
-      bright = 0.48;
+      bright = 0.4;
     } else if (k === 3) {
       tmp.copy(c.star).lerp(new THREE.Color(0xffffff), 0.35);
-      bright = 0.62;
+      bright = 0.55;
+    } else if (k === 5) {
+      // 层沿光环：暖金细边，比树冠亮一点但不抢戏
+      tmp.copy(c.band).lerp(new THREE.Color(0xffe6c0), 0.35);
+      bright = 0.28 + 0.09 * t[i];
     } else {
       tmp.copy(c.trunk);
       bright = 0.12;
@@ -1540,19 +1574,24 @@ const fireworks = new Fireworks(FW_MAX);
    7. 照片
    ============================================================ */
 const PHOTO_MAX = 10;
+/* 球面均匀分布（Fibonacci 球）：照片像星云一样浮在树周围 */
 const PHOTO_SLOTS = (() => {
   const out = [];
+  const ga = Math.PI * (3 - Math.sqrt(5));
   for (let i = 0; i < PHOTO_MAX; i++) {
-    const ring = Math.floor(i / 5);            // 上下两圈各 5 张
-    const k = i % 5;
+    const yy = 1 - (i / Math.max(1, PHOTO_MAX - 1)) * 2;      // -1 … 1
+    const rr = Math.sqrt(Math.max(0, 1 - yy * yy));
+    const th = ga * i;
     out.push({
-      a: k * (Math.PI * 2 / 5) + ring * 0.63,
-      h: 0.30 + ring * 0.33 + (k % 2) * 0.13,
-      s: 0.98 + (1 - ring) * 0.15
+      x: Math.cos(th) * rr, y: yy, z: Math.sin(th) * rr,
+      r: 7.4 + (i % 3) * 0.7,           // 半径轻微参差，像云不是壳
+      s: 0.95 + (i % 4) * 0.055,
+      ph: i * 0.83
     });
   }
   return out;
 })();
+const PHOTO_SPHERE = { cy: 5.4, ry: 0.64 };
 const photoGroup = new THREE.Group();
 photoGroup.renderOrder = 4;
 tree.group.add(photoGroup);
@@ -1560,41 +1599,59 @@ const photos = [];
 const photoSources = [];
 
 function makePhotoTexture(img) {
-  const S = 512, pad = 15;
+  const S = 512, cx = S / 2;
   const c = document.createElement('canvas');
   c.width = c.height = S;
   const g = c.getContext('2d');
-  // 相框
+  // 1. 圆形裁切 + cover 填满
+  const disc = S * 0.5 - 6;
   g.save();
-  const r = 24;
-  g.beginPath();
-  g.moveTo(r, 0); g.lineTo(S - r, 0); g.quadraticCurveTo(S, 0, S, r);
-  g.lineTo(S, S - r); g.quadraticCurveTo(S, S, S - r, S);
-  g.lineTo(r, S); g.quadraticCurveTo(0, S, 0, S - r);
-  g.lineTo(0, r); g.quadraticCurveTo(0, 0, r, 0);
-  g.closePath();
-  const grd = g.createLinearGradient(0, 0, S, S);
-  grd.addColorStop(0, '#d9c6a2'); grd.addColorStop(0.55, '#c0a87e'); grd.addColorStop(1, '#967d54');
-  g.fillStyle = grd; g.fill();
-  g.restore();
-  // 图片部分
-  const inner = S - pad * 2;
+  g.beginPath(); g.arc(cx, cx, disc, 0, Math.PI * 2); g.clip();
   const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
-  const scale = Math.max(inner / iw, inner / ih);
+  const scale = Math.max((disc * 2) / iw, (disc * 2) / ih);
   const dw = iw * scale, dh = ih * scale;
-  g.save();
-  g.beginPath();
-  g.rect(pad, pad, inner, inner);
-  g.clip();
-  g.drawImage(img, pad + (inner - dw) / 2, pad + (inner - dh) / 2, dw, dh);
+  g.drawImage(img, cx - dw / 2, cx - dh / 2, dw, dh);
+  // 圆形内侧压暗，贴住粒子世界的色调
+  const vg = g.createRadialGradient(cx, cx, disc * 0.55, cx, cx, disc);
+  vg.addColorStop(0, 'rgba(6,12,22,0)');
+  vg.addColorStop(1, 'rgba(6,12,22,.34)');
+  g.fillStyle = vg;
+  g.fillRect(0, 0, S, S);
   g.restore();
-  // 内阴影 + 高光
-  g.strokeStyle = 'rgba(20,14,8,.3)';
-  g.lineWidth = 3;
-  g.strokeRect(pad, pad, inner, inner);
-  g.strokeStyle = 'rgba(255,252,240,.55)';
-  g.lineWidth = 1;
-  g.strokeRect(2, 2, S - 4, S - 4);
+  // 2. 边缘羽化 → 和粒子融为一体（destination-in 保留中间、透明边缘）
+  const mask = g.createRadialGradient(cx, cx, disc * 0.58, cx, cx, disc * 1.02);
+  mask.addColorStop(0, 'rgba(0,0,0,1)');
+  mask.addColorStop(0.72, 'rgba(0,0,0,.88)');
+  mask.addColorStop(0.92, 'rgba(0,0,0,.35)');
+  mask.addColorStop(1, 'rgba(0,0,0,0)');
+  g.globalCompositeOperation = 'destination-in';
+  g.fillStyle = mask;
+  g.fillRect(0, 0, S, S);
+  g.globalCompositeOperation = 'source-over';
+  // 3. 一圈暖金细边 + 外发光，像被粒子托住的记忆球
+  g.strokeStyle = 'rgba(255,226,170,.55)';
+  g.lineWidth = 2;
+  g.beginPath(); g.arc(cx, cx, disc * 0.9, 0, Math.PI * 2); g.stroke();
+  const halo = g.createRadialGradient(cx, cx, disc * 0.84, cx, cx, disc * 1.06);
+  halo.addColorStop(0, 'rgba(255,214,150,0)');
+  halo.addColorStop(0.5, 'rgba(255,214,150,.22)');
+  halo.addColorStop(1, 'rgba(255,214,150,0)');
+  g.fillStyle = halo;
+  g.fillRect(0, 0, S, S);
+  // 4. 外圈一圈小粒子：让它看起来是「由星尘托住的照片星球」
+  const dots = 52;
+  for (let i = 0; i < dots; i++) {
+    const a = (i / dots) * Math.PI * 2 + Math.random() * 0.12;
+    const rr = disc * (0.965 + Math.random() * 0.11);
+    const x = cx + Math.cos(a) * rr, y = cx + Math.sin(a) * rr;
+    const rad = 2.0 + Math.random() * 2.6;
+    const dg = g.createRadialGradient(x, y, 0, x, y, rad * 2.6);
+    dg.addColorStop(0, 'rgba(255,244,214,' + (0.5 + Math.random() * 0.4).toFixed(2) + ')');
+    dg.addColorStop(0.45, 'rgba(255,222,160,.34)');
+    dg.addColorStop(1, 'rgba(255,210,140,0)');
+    g.fillStyle = dg;
+    g.beginPath(); g.arc(x, y, rad * 2.6, 0, Math.PI * 2); g.fill();
+  }
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;
@@ -1605,6 +1662,12 @@ function freeSlot() {
   const used = new Set(photos.map(p => p.userData.slot));
   for (let i = 0; i < PHOTO_SLOTS.length; i++) if (!used.has(i)) return i;
   return -1;
+}
+
+function slotPos(slot, out) {
+  const r = slot.r;
+  out.set(slot.x * r, PHOTO_SPHERE.cy + slot.y * r * PHOTO_SPHERE.ry, slot.z * r);
+  return out;
 }
 
 function addPhoto(img, src) {
@@ -1618,16 +1681,16 @@ function addPhoto(img, src) {
   const tex = makePhotoTexture(img);
   const mat = new THREE.SpriteMaterial({
     map: tex, transparent: true, depthWrite: false, depthTest: false,
-    color: 0xb4b4b4, toneMapped: true
+    color: 0xffffff, toneMapped: true, opacity: TUNE.photoOpacity
   });
   const sp = new THREE.Sprite(mat);
-  const rad = R * Math.pow(1 - slot.h, 0.87) * 0.99;
   sp.userData.slot = si;
-  sp.userData.tree = new THREE.Vector3(Math.cos(slot.a) * rad, 0.4 + slot.h * H, Math.sin(slot.a) * rad);
+  sp.userData.tree = slotPos(slot, new THREE.Vector3());
   sp.userData.size = slot.s;
   sp.userData.src = src;
+  sp.userData.hidden = false;
   sp.position.copy(sp.userData.tree);
-  sp.scale.set(slot.s, slot.s, 1);
+  sp.scale.set(slot.s * TUNE.photoSize, slot.s * TUNE.photoSize, 1);
   sp.renderOrder = 4;
   photoGroup.add(sp);
   photos.push(sp);
@@ -1668,12 +1731,35 @@ function renderPhotoPanel() {
     del.title = '删除这张';
     del.onclick = e => { e.stopPropagation(); removePhoto(sp); };
     item.appendChild(del);
+    const eye = document.createElement('button');
+    eye.className = 'ppHide';
+    eye.textContent = sp.userData.hidden ? '◌' : '◉';
+    eye.title = sp.userData.hidden ? '显示这张' : '隐藏这张';
+    eye.onclick = e => { e.stopPropagation(); togglePhotoHidden(sp); };
+    item.appendChild(eye);
+    if (sp.userData.hidden) item.classList.add('off');
     item.onclick = () => { if (typeof openPhoto === 'function') openPhoto(sp.userData.src); };
     grid.appendChild(item);
     if (!photoSources.some(p => p.sp === sp)) photoSources.push({ sp, src: sp.userData.src });
   });
   const cnt = $('ppCount');
   if (cnt) cnt.textContent = String(photos.length);
+  const tip = $('ppTip');
+  if (tip) {
+    const hid = photos.filter(p => p.userData.hidden).length;
+    tip.textContent = hid
+      ? '已隐藏 ' + hid + ' 张 · 点 ◌ 可恢复显示'
+      : '🤏 照片浮成星云球，捏合可抓住任意一颗；👁 隐藏 / × 删除 / 点缩略图看大图。';
+  }
+}
+
+function togglePhotoHidden(sp) {
+  const h = !sp.userData.hidden;
+  sp.userData.hidden = h;
+  sp.visible = !h;
+  if (h && PHOTOGRAB.sp === sp) { PHOTOGRAB.sp = null; }
+  renderPhotoPanel();
+  toast(h ? '已隐藏这张 · 粒子区域更干净了' : '照片已恢复显示', 1500);
 }
 
 /* ============================================================
@@ -1696,7 +1782,7 @@ const S = {
 /* ============================================================
    8.5 粒子参数（数量 / 速度 / 亮度 / 对比度 / 大小 / 泛光）
    ============================================================ */
-const TUNE_DEFAULT = { count: TREE_N, speed: 1, bright: 1, contrast: 1, size: 1, glow: 0.55 };
+const TUNE_DEFAULT = { count: TREE_N, speed: 1, bright: 1, contrast: 1, size: 1, glow: 0.55, photoSize: 1, photoOpacity: 0.92 };
 const TUNE = Object.assign({}, TUNE_DEFAULT);
 try {
   const saved = JSON.parse(localStorage.getItem('xmas-tune') || 'null');
@@ -1863,29 +1949,94 @@ function disableHands() {
   S.label = 'none';
 }
 
-function analyze(lm, aspect) {
+function analyze(lm, aspect, world) {
   const P = i => lm[i];
-  const d = (a, b) => Math.hypot((a.x - b.x) * aspect, a.y - b.y);
+  const aw = aspect || 1.333;
+  const d = (a, b) => Math.hypot((a.x - b.x) * aw, a.y - b.y);
   const wrist = P(0);
   const palm = Math.max(0.0001, d(P(5), P(17)));
   const sc = palm;
-  // 以手腕为基准的伸展比：实测握拳 0.6~0.8，张开 1.3+，比掌心基准稳得多
-  const ratio = (tip, pip) => d(P(tip), wrist) / Math.max(0.0001, d(P(pip), wrist));
-  const ext = [[8, 6], [12, 10], [16, 14], [20, 18]].map(([t, p]) => ratio(t, p) > 1.16);
+
+  // 指节夹角（2D，旋转不变）：伸直 ≈ -1，蜷起 ≈ +0.3
+  const cosAt = (a, b, c) => {
+    const ax = (a.x - b.x) * aw, ay = a.y - b.y;
+    const cx = (c.x - b.x) * aw, cy = c.y - b.y;
+    const l = Math.max(1e-6, Math.hypot(ax, ay) * Math.hypot(cx, cy));
+    return (ax * cx + ay * cy) / l;
+  };
+  // 两条向量夹角（度）
+  const angAt = (a, b, c, dd) => {
+    const ax = (a.x - b.x) * aw, ay = a.y - b.y;
+    const cx = (c.x - dd.x) * aw, cy = c.y - dd.y;
+    const l = Math.max(1e-6, Math.hypot(ax, ay) * Math.hypot(cx, cy));
+    const co = Math.min(1, Math.max(-1, (ax * cx + ay * cy) / l));
+    return Math.acos(co) * 180 / Math.PI;
+  };
+
+  // 3D 世界坐标（米）：手怎么转都不影响距离与夹角，五个指头最难判的部分靠它
+  const Wm = (world && world.length >= 21) ? world : null;
+  const d3 = (i, j) => {
+    const a = Wm[i], b = Wm[j];
+    return Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
+  };
+  const cos3 = (i, j, k) => {
+    const ax = Wm[i].x - Wm[j].x, ay = Wm[i].y - Wm[j].y, az = Wm[i].z - Wm[j].z;
+    const cx = Wm[k].x - Wm[j].x, cy = Wm[k].y - Wm[j].y, cz = Wm[k].z - Wm[j].z;
+    const l = Math.max(1e-6, Math.hypot(ax, ay, az) * Math.hypot(cx, cy, cz));
+    return (ax * cx + ay * cy + az * cz) / l;
+  };
+  const ang3 = (i, j, k, l) => {
+    const ax = Wm[i].x - Wm[j].x, ay = Wm[i].y - Wm[j].y, az = Wm[i].z - Wm[j].z;
+    const cx = Wm[k].x - Wm[l].x, cy = Wm[k].y - Wm[l].y, cz = Wm[k].z - Wm[l].z;
+    const l2 = Math.max(1e-6, Math.hypot(ax, ay, az) * Math.hypot(cx, cy, cz));
+    const co = Math.min(1, Math.max(-1, (ax * cx + ay * cy + az * cz) / l2));
+    return Math.acos(co) * 180 / Math.PI;
+  };
+
+  // 四指伸展：腕距比（主判据）+ 指节夹角（兜底），小指放宽一点
+  // 实测握拳 0.6~0.8，张开 1.3+；夹角法能救回「手掌侧对镜头」时塌掉的比值
+  const F = [[5, 6, 8, 1.15], [9, 10, 12, 1.15], [13, 14, 16, 1.15], [17, 18, 20, 1.10]];
+  const ext = F.map(([m, p, t, thr]) => {
+    const r = d(P(t), wrist) / Math.max(0.0001, d(P(p), wrist));
+    const straight = cosAt(P(m), P(p), P(t)) < -0.55;
+    let ok = r > thr || (straight && r > 1.02);
+    if (Wm) {
+      const r3 = d3(t, 0) / Math.max(0.0001, d3(p, 0));
+      ok = ok || (cos3(m, p, t) < -0.55 && r3 > 1.02);
+    }
+    return ok;
+  });
+
   const pinchD = d(P(4), P(8)) / sc;
   const thumbAway = d(P(4), P(17)) / sc;
-  // 拇指伸直度（指尖比指间关节更远离手腕）：握拳时拇指包在掌里，比值很小
   const thumbStraight = d(P(4), wrist) / Math.max(0.0001, d(P(3), wrist)) > 1.26;
-  const thumbSide = (P(5).y - P(4).y) > 0.015 || Math.abs(P(4).x - P(5).x) > 0.75 * sc;
+
+  // —— 拇指「张开」三判据：IP 关节基本伸直 + 与掌轴夹角够大 + 指尖离开掌心 ——
+  // 握拳时拇指横压在掌心 → 夹角小、指尖贴掌，两条都不满足
+  const thumbIpStraight2 = cosAt(P(2), P(3), P(4)) < -0.30;
+  const thumbAng2 = angAt(P(2), P(4), P(0), P(9));               // 拇指走向 vs 腕→中指根
+  const thumbFar2 = d(P(4), P(9)) / sc > 0.70 || d(P(4), P(5)) / sc > 0.55;
+  let thumbAng = thumbAng2;
+  let thumbOpen = thumbIpStraight2 && thumbAng2 > 30 && thumbFar2;
+  if (Wm) {
+    const a3 = ang3(2, 4, 0, 9);
+    const far3 = d3(4, 9) / Math.max(0.0001, d3(9, 0)) > 0.60;
+    const straight3 = cos3(2, 3, 4) < -0.25;
+    thumbAng = Math.max(a3, thumbAng2);
+    thumbOpen = thumbOpen || (a3 > 26 && far3 && straight3);
+  }
+  // 「五指张开」兜底：四指全开 + 拇指明显远离掌心 + 拇指尖比指根更靠外
+  const thumbSpread = thumbOpen || (thumbStraight && thumbAng > 22 && d(P(4), P(9)) / sc > 0.9);
+
   // 捏合：指尖贴合 + 拇指没有缩进掌心 + 食指指尖离开手腕（排除握拳）
   const pinching = pinchD < 0.68 && d(P(4), wrist) / sc > 0.9 && d(P(8), wrist) / sc > 1.05;
-  const thumbUp = thumbStraight && thumbSide && !pinching;
+  const thumbUp = thumbSpread && !pinching;
   const cnt = ext.filter(Boolean).length;
   let label = 'none';
   if (pinching && ext[1] && ext[2] && ext[3]) label = 'ok';
   else if (pinching) label = 'pinch';
   // 数字手势：1 食指 / 2 比耶 / 3 三指 / 4 四指 / 5 五指张开 / 6 拇指+小指
-  else if (thumbUp && !ext[0] && !ext[1] && !ext[2] && ext[3]) label = 'six';
+  else if (thumbUp && ext[3] && !ext[0] && !ext[1] && !ext[2]) label = 'six';
   else if (cnt === 1 && ext[0]) label = 'point';
   else if (cnt === 2) label = 'two';
   else if (cnt === 3) label = 'three';
@@ -1899,7 +2050,11 @@ function analyze(lm, aspect) {
   else if (label === 'pinch') conf = 0.78;
   else if (label === 'ok') conf = 0.86;
   else if (label !== 'ok' && label !== 'pinch') conf = 0.8;
-  return { label, cnt, ext, thumbUp, thumbStraight, pinching, thumbAway, pinchD, palm, cx: center.x, cy: center.y, tip: P(8), conf };
+  return {
+    label, cnt, ext, thumbUp, thumbStraight, thumbOpen, thumbSpread, thumbAng,
+    pinching, thumbAway, pinchD, palm, cx: center.x, cy: center.y, tip: P(8), conf,
+    world: !!Wm
+  };
 }
 
 function tickHands(now) {
@@ -1927,7 +2082,7 @@ function tickHands(now) {
     return;
   }
 
-  const info = analyze(HANDS.hands[0], HANDS.aspect);
+  const info = analyze(HANDS.hands[0], HANDS.aspect, res.worldLandmarks && res.worldLandmarks[0]);
   HANDS.info = info;
 
   if (info.label !== HANDS.pending) { HANDS.pending = info.label; HANDS.stable = 0; }
@@ -1940,8 +2095,9 @@ function tickHands(now) {
   }
   S.label = HANDS.label;
   S.conf = HANDS.label === 'none' ? 0 : info.conf;
-  camStat('检测到 ' + HANDS.hands.length + ' 只手 · 伸展 ' + info.cnt + '/4 · 判定 ' + info.label +
-    (HANDS.hands.length > 1 ? '（双手缩放中）' : ''));
+  camStat('检测到 ' + HANDS.hands.length + ' 只手 · 指 ' + info.ext.map(x => x ? '1' : '0').join('') +
+    ' · 拇指 ' + Math.round(info.thumbAng) + '°' + (info.thumbUp ? '开' : '收') +
+    ' · ' + info.label + (HANDS.hands.length > 1 ? '（双手缩放）' : ''));
 
   applyHands(info);
   updateHud();
@@ -2540,20 +2696,33 @@ function demoInk() {
    12. 照片
    ============================================================ */
 const galleryV = new THREE.Vector3();
+const photoTmpV = new THREE.Vector3();
 function updatePhotos(t) {
-  const g = softstep(0.16, 0.94, Math.max(S.gallery, S.spread * 0.72));
+  const gal = softstep(0.16, 0.94, Math.max(S.gallery, S.spread * 0.55));
+  const ps = TUNE.photoSize, po = TUNE.photoOpacity;
   for (let i = 0; i < photos.length; i++) {
     const sp = photos[i];
     if (PHOTOGRAB.sp === sp) {
-      const sc = sp.userData.size * 1.42;
+      const sc = sp.userData.size * ps * 1.32;
       sp.scale.set(sc, sc, 1);
+      sp.material.opacity = Math.min(1, po + 0.12);
       continue;                              // 被抓着的照片由 tickPhotoGrab 控制位置
     }
-    const ang = (i / Math.max(1, photos.length)) * Math.PI * 2 + t * 0.06;
-    galleryV.set(Math.sin(ang) * 9.4, 6.1 + Math.cos(ang * 2) * 1.8, Math.cos(ang) * 9.4);
-    sp.position.lerpVectors(sp.userData.tree, galleryV, g);
-    const sc = lerp(sp.userData.size, 1.85, g);
+    const slot = PHOTO_SLOTS[sp.userData.slot] || PHOTO_SLOTS[0];
+    // 球面上的缓慢公转 + 上下呼吸，像一片悬浮的星云
+    const spin = t * 0.055 + slot.ph * 0.16;
+    const cs = Math.cos(spin), sn = Math.sin(spin);
+    const rr = slot.r * (1 + 0.06 * gal) * (1 + Math.sin(t * 0.6 + slot.ph) * 0.03);
+    photoTmpV.set(
+      (slot.x * cs - slot.z * sn) * rr,
+      PHOTO_SPHERE.cy + slot.y * rr * PHOTO_SPHERE.ry + Math.sin(t * 0.85 + slot.ph) * 0.22,
+      (slot.x * sn + slot.z * cs) * rr
+    );
+    sp.position.lerp(photoTmpV, 1 - Math.exp(-2.4 * 0.016));
+    const sc = sp.userData.size * ps * (1 + 0.07 * gal);
     sp.scale.set(sc, sc, 1);
+    sp.material.opacity = po;
+    sp.visible = !sp.userData.hidden;
   }
 }
 
@@ -2585,13 +2754,14 @@ function tickPhotoGrab(dt) {
     const tip = HANDS.info.tip;
     let best = null, bestD = 0.13;
     for (const sp of photos) {
+      if (sp.userData.hidden) continue;
       const d = photoScreenDist(sp, tip);
       if (d < bestD) { bestD = d; best = sp; }
     }
     if (best) {
       PHOTOGRAB.sp = best;
       PHOTOGRAB.home.copy(best.position);
-      toast('抓住一张照片 · 移动手掌带着走，松手归位', 2000);
+      toast('抓住一颗照片星球 · 移动手掌带着走，松手归位', 2000);
       sfxChime(0.9);
     }
     return;
@@ -2791,7 +2961,9 @@ const TUNE_UI = [
   { id: 'rngBright', out: 'vBright', key: 'bright', fmt: v => v.toFixed(2) },
   { id: 'rngContrast', out: 'vContrast', key: 'contrast', fmt: v => v.toFixed(2) },
   { id: 'rngSize', out: 'vSize', key: 'size', fmt: v => v.toFixed(2) },
-  { id: 'rngGlow', out: 'vGlow', key: 'glow', fmt: v => v.toFixed(2) }
+  { id: 'rngGlow', out: 'vGlow', key: 'glow', fmt: v => v.toFixed(2) },
+  { id: 'rngPhotoSize', out: 'vPhotoSize', key: 'photoSize', fmt: v => v.toFixed(2) },
+  { id: 'rngPhotoOpacity', out: 'vPhotoOpacity', key: 'photoOpacity', fmt: v => v.toFixed(2) }
 ];
 function syncTuneUI() {
   TUNE_UI.forEach(it => {
@@ -3021,10 +3193,10 @@ function frame() {
 
   const pulse = 1 + Math.sin(t * 2.1) * 0.06;
   const starFade = Math.max(0, 1 - S.spread * 1.06);
-  tree.halo.scale.set(3.4 * pulse, 3.4 * pulse, 1);
-  tree.halo.material.opacity = (0.16 + 0.06 * Math.sin(t * 1.6)) * S.dawn * starFade;
+  tree.halo.scale.set(3.0 * pulse, 3.0 * pulse, 1);
+  tree.halo.material.opacity = (0.11 + 0.05 * Math.sin(t * 1.6)) * S.dawn * starFade;
   tree.starSprite.scale.set(2.9 * pulse, 2.9 * pulse, 1);
-  tree.starSprite.material.opacity = (0.5 + 0.12 * Math.sin(t * 1.4)) * S.dawn * starFade;
+  tree.starSprite.material.opacity = (0.32 + 0.08 * Math.sin(t * 1.4)) * S.dawn * starFade;
   tree.core.material.opacity = 0.14 * (1 - S.spread * 0.7) * S.dawn;
 
   // 相机
