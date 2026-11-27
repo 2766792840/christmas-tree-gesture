@@ -112,7 +112,7 @@ christmas-tree-gesture/
 ├── 01-tree.png ~ 04-ink-3d.png  # 截图
 ├── tools/serve.ps1           # Windows 本地静态服务
 ├── tools/打开本地预览.cmd
-└── .github/                  # Pages workflow + Issue 模板
+└── .github/ISSUE_TEMPLATE/   # 报 Bug / 提需求 模板（空白 Issue 已关闭）
 ```
 
 ## 🤝 共建
@@ -140,3 +140,5 @@ Chrome / Edge / 较新的 Firefox、Safari 可用；手势需要 WebGL2 + 摄像
 ## License
 
 MIT © 2026 Christmas Tree contributors
+
+其他去处：[Wiki](https://github.com/2766792840/christmas-tree-gesture/wiki)（玩法与已知问题的长文版）· [Discussions](https://github.com/2766792840/christmas-tree-gesture/discussions)（随便聊）· [在线体验](https://2766792840.github.io/christmas-tree-gesture/)
