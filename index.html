@@ -149,6 +149,55 @@ html,body{height:100%;overflow:hidden;background:#02040a;color:#eaf3ff;
 .shchip:hover{color:#e2ecfb;border-color:rgba(170,205,255,.34)}
 .shchip.on{color:#fff6e2;border-color:rgba(255,215,140,.6);background:rgba(84,58,18,.5);
   box-shadow:0 0 16px rgba(255,190,90,.26)}
+.shchip em{font-style:normal;font-family:Cinzel,serif;font-size:9px;color:#7d95b3;margin-right:3px}
+.shchip.on em{color:#ffcf87}
+
+/* 粒子调节面板（右侧，与画笔条互斥） */
+#tunePanel{position:fixed;right:26px;top:112px;z-index:26;width:240px;padding:13px 15px 12px;border-radius:16px;
+  background:rgba(8,15,28,.55);border:1px solid rgba(140,190,255,.14);backdrop-filter:blur(14px);
+  box-shadow:0 22px 60px rgba(0,0,0,.5);opacity:0;pointer-events:none;transform:translateX(10px);
+  transition:opacity .35s ease,transform .35s ease}
+#tunePanel.show{opacity:1;pointer-events:auto;transform:none}
+.tpHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.tpHead b{font-family:Cinzel,serif;font-size:9px;letter-spacing:.24em;color:#ffcf87;font-weight:600}
+.tpHead button{width:20px;height:20px;padding:0;border-radius:7px;border:1px solid rgba(150,190,240,.16);
+  background:rgba(10,18,32,.5);color:#93abc7;font-size:11px;line-height:1;cursor:pointer;font-family:inherit}
+.tpHead button:hover{color:#ffe6b3;border-color:rgba(255,215,140,.5)}
+.tpRow{display:flex;justify-content:space-between;align-items:baseline;font-size:10.5px;color:#8fa8c4;margin-top:9px}
+.tpRow b{color:#ffe3ac;font-weight:500;font-variant-numeric:tabular-nums;font-size:10.5px}
+.tpRange{-webkit-appearance:none;appearance:none;width:100%;height:2px;margin:6px 0 0;border-radius:2px;
+  background:linear-gradient(90deg,rgba(255,207,135,.5),rgba(140,190,255,.2));outline:none;cursor:pointer}
+.tpRange::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff6df,#ffc978);border:none;
+  box-shadow:0 0 10px rgba(255,190,90,.65);cursor:pointer}
+.tpRange::-moz-range-thumb{width:11px;height:11px;border:none;border-radius:50%;background:#ffc978}
+.tpReset{margin-top:13px;width:100%;padding:6px;border-radius:9px;font-family:inherit;font-size:10.5px;
+  color:#a9c2dc;background:rgba(255,255,255,.04);border:1px solid rgba(160,210,255,.16);
+  cursor:pointer;transition:all .25s}
+.tpReset:hover{color:#ffe6b3;border-color:rgba(255,215,140,.45);background:rgba(84,58,18,.35)}
+
+/* 照片管理面板（左下） */
+#photoPanel{position:fixed;left:26px;bottom:118px;z-index:24;width:208px;padding:11px 12px 10px;border-radius:15px;
+  background:rgba(8,15,28,.5);border:1px solid rgba(140,190,255,.12);backdrop-filter:blur(12px);
+  opacity:0;pointer-events:none;transform:translateY(10px);transition:opacity .4s ease,transform .4s ease}
+#photoPanel.show{opacity:1;pointer-events:auto;transform:none}
+.ppHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.ppHead b{font-family:Cinzel,serif;font-size:9px;letter-spacing:.2em;color:#8fb6d8;font-weight:600}
+.ppHead b span{color:#ffcf87;font-variant-numeric:tabular-nums}
+.ppAdd{width:22px;height:22px;padding:0;border-radius:7px;border:1px solid rgba(150,190,240,.2);
+  background:rgba(10,18,32,.6);color:#ffcf87;font-size:13px;line-height:1;cursor:pointer;font-family:inherit}
+.ppAdd:hover{color:#ffe6b3;border-color:rgba(255,215,140,.5);background:rgba(84,58,18,.45)}
+.ppGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.ppItem{position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;cursor:pointer;
+  border:1px solid rgba(255,255,255,.13);background:#04121f}
+.ppItem img{width:100%;height:100%;object-fit:cover;display:block;opacity:.9;transition:transform .3s,opacity .3s}
+.ppItem:hover img{opacity:1;transform:scale(1.1)}
+.ppDel{position:absolute;top:1px;right:1px;width:15px;height:15px;padding:0;border:none;border-radius:50%;
+  background:rgba(6,12,22,.85);color:#ff9fb0;font-size:10px;line-height:1;cursor:pointer;
+  opacity:0;transition:opacity .22s;font-family:inherit}
+.ppItem:hover .ppDel{opacity:1}
+.ppDel:hover{background:rgba(170,32,52,.92);color:#fff}
+.ppTip{margin-top:9px;font-size:9.5px;line-height:1.6;color:#6f89a8}
 
 /* ============================================================
    4. 摄像头小窗
@@ -271,6 +320,8 @@ body.clean #exitClean:hover{opacity:1;color:#ffe6b3}
   .gesturebar{bottom:14px;gap:5px;max-width:94vw}
   .shapebar{bottom:56px}
   .brushbar{right:12px;top:96px;gap:7px;padding:9px 7px}
+  #tunePanel{right:12px;top:96px;width:min(240px,calc(100vw - 24px))}
+  #photoPanel{left:12px;bottom:150px;width:min(208px,46vw)}
   .bcolor{width:17px;height:17px}
   .gchip{font-size:10px;padding:5px 8px}
   #camPanel{right:14px;bottom:84px;width:150px}
@@ -307,6 +358,7 @@ body.clean #exitClean:hover{opacity:1;color:#ffe6b3}
     <button class="btn icon" id="btnShot" title="保存为图片">存图</button>
     <button class="btn icon" id="btnDemo" title="演示模式：环绕运镜 + 形态轮播">演示</button>
     <button class="btn icon" id="btnBrush" title="粒子签名：食指作笔，握拳抬笔">画笔</button>
+    <button class="btn icon" id="btnTune" title="粒子调节：数量 / 速度 / 亮度 / 对比度">调节</button>
   </nav>
 </header>
 
@@ -330,12 +382,13 @@ body.clean #exitClean:hover{opacity:1;color:#ffe6b3}
 
 <div class="gesturebar" id="gestureBar">
   <div class="gchip" data-g="fist"><b>✊ 握拳</b>聚成树</div>
-  <div class="gchip" data-g="open"><b>🖐 张开</b>散作星云</div>
-  <div class="gchip" data-g="move"><b>↔ 横移</b>转动树</div>
-  <div class="gchip" data-g="pinch"><b>🤏 捏合</b>推近拉远</div>
-  <div class="gchip" data-g="point"><b>☝ 指星</b>落笔 / 烟花</div>
-  <div class="gchip" data-g="ok"><b>👌 OK</b>许愿 / 收工</div>
-  <div class="gchip" data-g="peace"><b>✌ 比耶</b>换形态</div>
+  <div class="gchip" data-g="point"><b>☝ 1 指</b>爱心</div>
+  <div class="gchip" data-g="two"><b>✌ 2 指</b>五角星</div>
+  <div class="gchip" data-g="three"><b>🖖 3 指</b>雪花</div>
+  <div class="gchip" data-g="four"><b>🖕 4 指</b>花环</div>
+  <div class="gchip" data-g="five"><b>🖐 5 指</b>星云</div>
+  <div class="gchip" data-g="six"><b>🤘 6 指</b>MERRY</div>
+  <div class="gchip" data-g="pinch"><b>🤏 捏合</b>缩放 / 抓照片</div>
   <div class="gchip" data-g="both"><b>🙌 双手</b>缩放满屏</div>
 </div>
 
@@ -359,11 +412,35 @@ body.clean #exitClean:hover{opacity:1;color:#ffe6b3}
 
 <div class="shapebar" id="shapeBar">
   <span class="shlabel">SHAPE</span>
-  <button class="shchip on" data-shape="galaxy">✦ 星云</button>
-  <button class="shchip" data-shape="heart">♥ 爱心</button>
-  <button class="shchip" data-shape="flake">❄ 雪花</button>
-  <button class="shchip" data-shape="star">★ 五角星</button>
-  <button class="shchip" data-shape="text">MERRY</button>
+  <button class="shchip" data-shape="heart"><em>1</em>♥ 爱心</button>
+  <button class="shchip" data-shape="star"><em>2</em>★ 五角星</button>
+  <button class="shchip" data-shape="flake"><em>3</em>❄ 雪花</button>
+  <button class="shchip" data-shape="wreath"><em>4</em>❂ 花环</button>
+  <button class="shchip on" data-shape="galaxy"><em>5</em>✦ 星云</button>
+  <button class="shchip" data-shape="text"><em>6</em>MERRY</button>
+</div>
+
+<div id="tunePanel">
+  <div class="tpHead"><b>PARTICLES</b><button id="tpClose" title="收起">✕</button></div>
+  <div class="tpRow"><span>粒子数量</span><b id="vCount">26000</b></div>
+  <input class="tpRange" id="rngCount" type="range" min="6000" max="42000" step="1000" value="26000">
+  <div class="tpRow"><span>飘动速度</span><b id="vSpeed">1.00×</b></div>
+  <input class="tpRange" id="rngSpeed" type="range" min="0.15" max="2.4" step="0.05" value="1">
+  <div class="tpRow"><span>亮度</span><b id="vBright">1.00</b></div>
+  <input class="tpRange" id="rngBright" type="range" min="0.35" max="2" step="0.05" value="1">
+  <div class="tpRow"><span>对比度</span><b id="vContrast">1.00</b></div>
+  <input class="tpRange" id="rngContrast" type="range" min="0.6" max="1.9" step="0.05" value="1">
+  <div class="tpRow"><span>粒子大小</span><b id="vSize">1.00</b></div>
+  <input class="tpRange" id="rngSize" type="range" min="0.55" max="1.9" step="0.02" value="1">
+  <div class="tpRow"><span>泛光强度</span><b id="vGlow">0.55</b></div>
+  <input class="tpRange" id="rngGlow" type="range" min="0" max="1.4" step="0.02" value="0.55">
+  <button class="tpReset" id="tpReset">恢复默认</button>
+</div>
+
+<div id="photoPanel">
+  <div class="ppHead"><b>PHOTOS <span id="ppCount">0</span>/10</b><button class="ppAdd" id="ppAdd" title="添加照片">＋</button></div>
+  <div class="ppGrid" id="ppGrid"></div>
+  <div class="ppTip">🤏 捏合抓住照片可拖着走，松手归位；点缩略图看大图，× 删除。</div>
 </div>
 
 <div id="camPanel">
@@ -390,14 +467,14 @@ body.clean #exitClean:hover{opacity:1;color:#ffe6b3}
     <h1>让散落的光，<br><em>为你聚成一棵树</em></h1>
     <p class="lede">一颗颗星尘从银河里醒来，落在你面前。抬起手，它会回应你。</p>
     <ul class="glist">
-      <li><s>✊</s><span><b>握拳</b> · 星尘聚拢成树</span></li>
-      <li><s>🖐</s><span><b>张开手掌</b> · 树散作旋转星云</span></li>
-      <li><s>↔</s><span><b>手掌横移</b> · 转整棵树，可转 360°</span></li>
-      <li><s>🤏</s><span><b>捏合开合</b> · 推远或拉近镜头</span></li>
-      <li><s>☝</s><span><b>食指</b> · 落笔写粒子签名 / 点一下放烟花</span></li>
-      <li><s>👌</s><span><b>OK 手势</b> · 收下一句心愿</span></li>
-      <li><s>✌</s><span><b>比耶</b> · 换一种粒子形态</span></li>
-      <li><s>🙌</s><span><b>双手张合</b> · 距离决定缩放</span></li>
+      <li><s>1</s><span><b>食指</b> · 爱心（举 1 秒生效）</span></li>
+      <li><s>2</s><span><b>两指比耶</b> · 五角星</span></li>
+      <li><s>3</s><span><b>三指</b> · 雪花</span></li>
+      <li><s>4</s><span><b>四指</b> · 花环</span></li>
+      <li><s>5</s><span><b>五指张开</b> · 星云</span></li>
+      <li><s>6</s><span><b>拇指+小指</b> · MERRY 文字</span></li>
+      <li><s>🤏</s><span><b>捏合</b> · 推拉镜头 / 抓住照片拖动</span></li>
+      <li><s>✊</s><span><b>握拳</b> · 星尘收拢成树</span></li>
     </ul>
     <div class="row">
       <button class="btn-primary" id="btnStartCam">开启摄像头 · 手势互动</button>
@@ -451,7 +528,7 @@ const softstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return
 const IS_TOUCH = matchMedia('(hover:none)').matches;
 const LOW = IS_TOUCH || innerWidth < 820;
 const Q = LOW ? 0.55 : 1;
-const TREE_N = Math.round(26000 * Q);
+let TREE_N = Math.round(26000 * Q);
 const SKY_N = Math.round(4200 * Q);
 const SNOW_N = Math.round(2800 * Q);
 const FW_MAX = LOW ? 1500 : 2800;
@@ -483,7 +560,10 @@ const bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth * 0.62, inner
 composer.addPass(bloomPass);
 composer.addPass(new OutputPass());
 
-const U = { uTime: { value: 0 }, uPixel: { value: 1 } };
+const U = {
+  uTime: { value: 0 }, uPixel: { value: 1 },
+  uBright: { value: 1 }, uContrast: { value: 1 }, uSizeK: { value: 1 }
+};
 function syncPixel() { U.uPixel.value = renderer.getPixelRatio() * innerHeight * 0.55; }
 syncPixel();
 
@@ -652,9 +732,9 @@ const starShapeTex = starSpriteTexture();
 /* ============================================================
    4. 星尘圣诞树
    ============================================================ */
-function buildTree() {
+function buildTree(count) {
   const group = new THREE.Group();
-  const n = TREE_N;
+  const n = Math.max(2000, Math.round(count || TREE_N));
   const aTree = new Float32Array(n * 3);
   const aShapeA = new Float32Array(n * 3);
   const aShapeB = new Float32Array(n * 3);
@@ -779,7 +859,7 @@ function buildTree() {
     vertexShader: `
       attribute vec3 aTree; attribute vec3 aShapeA; attribute vec3 aShapeB; attribute vec3 aColor;
       attribute float aSize; attribute float aSeed; attribute float aKind;
-      uniform float uTime, uSpread, uPixel, uScale, uDawn, uMorph, uPointerOn;
+      uniform float uTime, uSpread, uPixel, uScale, uDawn, uMorph, uPointerOn, uSizeK;
       uniform vec3 uPointer;
       varying vec3 vColor; varying float vA; varying float vK;
       void main(){
@@ -797,7 +877,7 @@ function buildTree() {
         gl_Position = projectionMatrix * mv;
         float dist = max(0.6, -mv.z);
         float tw = 0.62 + 0.38 * sin(uTime * (1.3 + aSeed * 3.4) + aSeed * 60.0);
-        float sz = aSize * uScale * uPixel / dist * (1.0 - 0.5 * uSpread);
+        float sz = aSize * uScale * uPixel / dist * (1.0 - 0.5 * uSpread) * uSizeK;
         gl_PointSize = clamp(sz, 0.9, 9.0);
         vColor = aColor;
         vA = (0.5 + 0.5 * min(1.0, sz / 2.6)) * (0.62 + 0.55 * tw) * uDawn;
@@ -805,6 +885,7 @@ function buildTree() {
       }`,
     fragmentShader: `
       varying vec3 vColor; varying float vA; varying float vK;
+      uniform float uBright, uContrast;
       void main(){
         vec2 q = gl_PointCoord - 0.5;
         float d = length(q);
@@ -812,8 +893,10 @@ function buildTree() {
         float core = smoothstep(0.5, 0.03, d);
         float halo = pow(max(0.0, 1.0 - d * 2.0), 2.4);
         vec3 col = vColor * (0.32 + 1.15 * core) * (0.5 + 0.55 * halo);
+        col = (col - 0.5) * uContrast + 0.5;
+        col *= uBright;
         float a = (halo * 0.5 + core * 0.8) * vA;
-        gl_FragColor = vec4(col, a);
+        gl_FragColor = vec4(max(col, 0.0), a);
       }`,
     transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: true
   });
@@ -856,7 +939,7 @@ function buildTree() {
   return { group, points, geo, mat, uni, halo, core, starSprite, meta, aColor, aShapeA, aShapeB, aTree };
 }
 
-const tree = buildTree();
+let tree = buildTree();
 tree.group.name = 'treeGroup';
 scene.add(tree.group);
 
@@ -865,7 +948,8 @@ function paintTree() {
   const { kind, t, ci, seed } = tree.meta;
   const arr = tree.aColor;
   const tmp = new THREE.Color();
-  for (let i = 0; i < TREE_N; i++) {
+  const N = tree.meta.kind.length;
+  for (let i = 0; i < N; i++) {
     const p = i * 3, k = kind[i];
     let bright = 1;
     if (k === 0) {
@@ -900,8 +984,8 @@ paintTree();
 /* ============================================================
    4.5 多形态：星云 / 爱心 / 雪花 / 五角星 / 文字
    ============================================================ */
-const SHAPE_ORDER = ['galaxy', 'heart', 'flake', 'star', 'text'];
-const SHAPE_LABEL = { galaxy: '星云', heart: '爱心', flake: '雪花', star: '五角星', text: 'MERRY' };
+const SHAPE_ORDER = ['heart', 'star', 'flake', 'wreath', 'galaxy', 'text'];
+const SHAPE_LABEL = { heart: '爱心', star: '五角星', flake: '雪花', wreath: '花环', galaxy: '星云', text: 'MERRY' };
 let shapeNow = 'galaxy';
 let shapeTextPts = null;
 const srnd = (i, s) => { const x = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453; return x - Math.floor(x); };
@@ -990,6 +1074,34 @@ function shapePoint(name, i, out, p) {
     out[p] = Math.cos(ang) * rr;
     out[p + 1] = Math.sin(ang) * rr + 5.6;
     out[p + 2] = (srnd(i, 13) * 2 - 1) * 1.1;
+  } else if (name === 'wreath') {
+    // 圣诞花环：双股编织环带 + 顶部蝴蝶结 + 零散浆果
+    const pick = srnd(i, 20);
+    if (pick < 0.17) {
+      const k = srnd(i, 21) < 0.5 ? -1 : 1;
+      if (srnd(i, 22) < 0.64) {
+        // 蝴蝶结左/右环
+        const th = srnd(i, 23) * Math.PI * 2;
+        out[p] = k * (0.95 + Math.cos(th) * 0.86) + (srnd(i, 34) - 0.5) * 0.1;
+        out[p + 1] = 12.86 + Math.sin(th) * 0.66 + (srnd(i, 35) - 0.5) * 0.1;
+        out[p + 2] = Math.sin(th) * 0.38;
+      } else {
+        // 两条飘带
+        const u = srnd(i, 24);
+        out[p] = k * (0.35 + u * 1.55) - k * Math.sin(u * 3.1) * 0.22;
+        out[p + 1] = 12.5 - u * 2.2;
+        out[p + 2] = (srnd(i, 25) * 2 - 1) * 0.45;
+      }
+      return;
+    }
+    const ang = srnd(i, 26) * Math.PI * 2;
+    const strand = srnd(i, 27);                                  // 两股错开的枝条
+    const tw = Math.sin(ang * 7 + strand * Math.PI) * 0.34;      // 编织起伏
+    const off = (srnd(i, 29) * 2 - 1) * 0.82;
+    const rr = 6.85 + (strand < 0.55 ? 0 : 0.48) + tw + off;
+    out[p] = Math.cos(ang) * rr + (srnd(i, 30) - 0.5) * 0.16;
+    out[p + 1] = Math.sin(ang) * rr * 0.9 + 5.9 + (srnd(i, 31) - 0.5) * 0.16;
+    out[p + 2] = (srnd(i, 32) * 2 - 1) * (0.3 + 0.7 * srnd(i, 33));
   } else if (name === 'text') {
     const pts = textSamples();
     const idx = Math.floor(srnd(i, 14) * (pts.length / 2)) * 2;
@@ -1008,14 +1120,16 @@ function shapePoint(name, i, out, p) {
 }
 
 function buildShapeInto(name, out) {
-  for (let i = 0; i < TREE_N; i++) shapePoint(name, i, out, i * 3);
+  const N = tree.meta.kind.length;
+  for (let i = 0; i < N; i++) shapePoint(name, i, out, i * 3);
 }
 
 function paintShape(name) {
   const c = theme();
   const arr = tree.aColor, tmp = new THREE.Color(), white = new THREE.Color(0xffffff);
   const seed = tree.meta.seed, B = tree.aShapeB;
-  for (let i = 0; i < TREE_N; i++) {
+  const N = tree.meta.kind.length;
+  for (let i = 0; i < N; i++) {
     const p = i * 3, s = seed[i], y = B[p + 1];
     let bright = 0.5;
     if (name === 'heart') {
@@ -1027,6 +1141,14 @@ function paintShape(name) {
     } else if (name === 'star') {
       tmp.copy(c.band).lerp(white, 0.35 * s);
       bright = 0.52 + 0.12 * s;
+    } else if (name === 'wreath') {
+      // 环带常青绿，顶部蝴蝶结艳红，掺金亮点 + 少量雪白
+      const y = B[p + 1];
+      if (y > 12.15) { tmp.copy(c.orn[0]); bright = 0.8 + 0.16 * s; }
+      else if (s > 0.86) { tmp.copy(c.orn[0]); bright = 0.86; }
+      else if (s > 0.78) { tmp.copy(c.band); bright = 0.74; }
+      else if (s < 0.08) { tmp.copy(white); bright = 0.5; }
+      else { tmp.copy(c.foB).lerp(c.foA, Math.min(1, s * 1.7)); bright = 0.34 + 0.24 * Math.abs(Math.sin(y * 1.9)); }
     } else if (name === 'text') {
       tmp.copy(c.foB).lerp(c.band, s);
       bright = 0.4 + 0.22 * s;
@@ -1079,7 +1201,7 @@ document.querySelectorAll('.shchip').forEach(btn => {
   btn.addEventListener('click', () => setShape(btn.dataset.shape));
 });
 addEventListener('keydown', e => {
-  if (e.key >= '1' && e.key <= '5') {
+  if (e.key >= '1' && e.key <= '9') {
     const n = SHAPE_ORDER[+e.key - 1];
     if (n) setShape(n);
   }
@@ -1417,11 +1539,20 @@ const fireworks = new Fireworks(FW_MAX);
 /* ============================================================
    7. 照片
    ============================================================ */
-const PHOTO_SLOTS = [
-  { a: 0.55, h: 0.60, s: 1.18 }, { a: 5.75, h: 0.60, s: 1.18 },
-  { a: 1.35, h: 0.31, s: 1.06 }, { a: 4.95, h: 0.31, s: 1.06 },
-  { a: 2.25, h: 0.80, s: 1.0 }, { a: 4.15, h: 0.80, s: 1.0 }
-];
+const PHOTO_MAX = 10;
+const PHOTO_SLOTS = (() => {
+  const out = [];
+  for (let i = 0; i < PHOTO_MAX; i++) {
+    const ring = Math.floor(i / 5);            // 上下两圈各 5 张
+    const k = i % 5;
+    out.push({
+      a: k * (Math.PI * 2 / 5) + ring * 0.63,
+      h: 0.30 + ring * 0.33 + (k % 2) * 0.13,
+      s: 0.98 + (1 - ring) * 0.15
+    });
+  }
+  return out;
+})();
 const photoGroup = new THREE.Group();
 photoGroup.renderOrder = 4;
 tree.group.add(photoGroup);
@@ -1470,9 +1601,20 @@ function makePhotoTexture(img) {
   return tex;
 }
 
+function freeSlot() {
+  const used = new Set(photos.map(p => p.userData.slot));
+  for (let i = 0; i < PHOTO_SLOTS.length; i++) if (!used.has(i)) return i;
+  return -1;
+}
+
 function addPhoto(img, src) {
-  if (photos.length >= PHOTO_SLOTS.length) return false;
-  const slot = PHOTO_SLOTS[photos.length];
+  if (photos.length >= PHOTO_MAX) {
+    toast('最多 ' + PHOTO_MAX + ' 张，先删一张再添加吧', 2200);
+    return false;
+  }
+  const si = freeSlot();
+  if (si < 0) return false;
+  const slot = PHOTO_SLOTS[si];
   const tex = makePhotoTexture(img);
   const mat = new THREE.SpriteMaterial({
     map: tex, transparent: true, depthWrite: false, depthTest: false,
@@ -1480,6 +1622,7 @@ function addPhoto(img, src) {
   });
   const sp = new THREE.Sprite(mat);
   const rad = R * Math.pow(1 - slot.h, 0.87) * 0.99;
+  sp.userData.slot = si;
   sp.userData.tree = new THREE.Vector3(Math.cos(slot.a) * rad, 0.4 + slot.h * H, Math.sin(slot.a) * rad);
   sp.userData.size = slot.s;
   sp.userData.src = src;
@@ -1488,7 +1631,49 @@ function addPhoto(img, src) {
   sp.renderOrder = 4;
   photoGroup.add(sp);
   photos.push(sp);
+  renderPhotoPanel();
   return true;
+}
+
+function removePhoto(sp) {
+  const i = photos.indexOf(sp);
+  if (i < 0) return;
+  photos.splice(i, 1);
+  photoGroup.remove(sp);
+  if (sp.material.map) sp.material.map.dispose();
+  sp.material.dispose();
+  const src = sp.userData.src;
+  if (typeof src === 'string' && src.startsWith('blob:')) URL.revokeObjectURL(src);
+  if (PHOTOGRAB.sp === sp) PHOTOGRAB.sp = null;
+  const j = photoSources.findIndex(p => p.sp === sp);
+  if (j >= 0) photoSources.splice(j, 1);
+  renderPhotoPanel();
+  toast('照片已移除 · 还剩 ' + photos.length + ' 张', 1600);
+}
+
+function renderPhotoPanel() {
+  const grid = $('ppGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  photos.forEach(sp => {
+    const item = document.createElement('div');
+    item.className = 'ppItem';
+    const img = document.createElement('img');
+    img.src = sp.userData.src;
+    img.alt = '照片';
+    item.appendChild(img);
+    const del = document.createElement('button');
+    del.className = 'ppDel';
+    del.textContent = '×';
+    del.title = '删除这张';
+    del.onclick = e => { e.stopPropagation(); removePhoto(sp); };
+    item.appendChild(del);
+    item.onclick = () => { if (typeof openPhoto === 'function') openPhoto(sp.userData.src); };
+    grid.appendChild(item);
+    if (!photoSources.some(p => p.sp === sp)) photoSources.push({ sp, src: sp.userData.src });
+  });
+  const cnt = $('ppCount');
+  if (cnt) cnt.textContent = String(photos.length);
 }
 
 /* ============================================================
@@ -1509,6 +1694,58 @@ const S = {
 };
 
 /* ============================================================
+   8.5 粒子参数（数量 / 速度 / 亮度 / 对比度 / 大小 / 泛光）
+   ============================================================ */
+const TUNE_DEFAULT = { count: TREE_N, speed: 1, bright: 1, contrast: 1, size: 1, glow: 0.55 };
+const TUNE = Object.assign({}, TUNE_DEFAULT);
+try {
+  const saved = JSON.parse(localStorage.getItem('xmas-tune') || 'null');
+  if (saved && typeof saved === 'object') {
+    for (const k in TUNE_DEFAULT) if (typeof saved[k] === 'number') TUNE[k] = saved[k];
+  }
+} catch (e) {}
+function saveTune() {
+  try { localStorage.setItem('xmas-tune', JSON.stringify(TUNE)); } catch (e) {}
+}
+
+let rebuildTimer = 0;
+function rebuildTree(n) {
+  const N = Math.max(3000, Math.round(n));
+  if (tree.meta.kind.length === N) return;
+  const spreadNow = S.spread;
+  const old = tree;
+  old.group.remove(photoGroup);
+  old.group.remove(INK.points);
+  scene.remove(old.group);
+  old.geo.dispose();
+  old.mat.dispose();
+  TREE_N = N;
+  tree = buildTree(N);
+  tree.group.name = 'treeGroup';
+  scene.add(tree.group);
+  tree.group.add(photoGroup);
+  tree.group.add(INK.points);
+  // 笔画与树的粒子共用 spread / scale，换树后要重新绑定 uniform
+  INK.points.material.uniforms.uSpread = tree.uni.uSpread;
+  INK.points.material.uniforms.uScale = tree.uni.uScale;
+  if (spreadNow > 0.2) {
+    buildShapeInto(shapeNow, tree.aShapeB);
+    tree.aShapeA.set(tree.aShapeB);
+    tree.geo.attributes.aShapeA.needsUpdate = true;
+    tree.geo.attributes.aShapeB.needsUpdate = true;
+    paintShape(shapeNow);
+  } else {
+    paintTree();
+  }
+  tree.uni.uSpread.value = spreadNow;
+  tree.group.rotation.y = S.rot;
+}
+function scheduleRebuild() {
+  clearTimeout(rebuildTimer);
+  rebuildTimer = setTimeout(() => rebuildTree(TUNE.count), 260);
+}
+
+/* ============================================================
    9. 手势识别（MediaPipe HandLandmarker）
    ============================================================ */
 const WASM_BASE = 'https://fastly.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm';
@@ -1520,7 +1757,7 @@ const HANDS = {
   video: null, canvas: null, ctx: null,
   stream: null, model: null, ready: false, running: false, loading: false,
   last: 0, hands: [], label: 'none', pending: 'none', stable: 0, info: null,
-  lastPoint: 0, lastWish: 0, aspect: 1.333
+  labelSince: 0, prevLabel: 'none', lastPoint: 0, lastWish: 0, aspect: 1.333
 };
 
 function camStat(msg, warn) {
@@ -1633,28 +1870,36 @@ function analyze(lm, aspect) {
   const palm = Math.max(0.0001, d(P(5), P(17)));
   const sc = palm;
   // 以手腕为基准的伸展比：实测握拳 0.6~0.8，张开 1.3+，比掌心基准稳得多
-  const ext = [[8, 6], [12, 10], [16, 14], [20, 18]].map(([tip, pip]) =>
-    d(P(tip), wrist) / Math.max(0.0001, d(P(pip), wrist)) > 1.18);
-  const idxRatio = d(P(8), wrist) / Math.max(0.0001, d(P(6), wrist));
-  const thumbOut = d(P(4), P(5)) / sc > 0.5;
+  const ratio = (tip, pip) => d(P(tip), wrist) / Math.max(0.0001, d(P(pip), wrist));
+  const ext = [[8, 6], [12, 10], [16, 14], [20, 18]].map(([t, p]) => ratio(t, p) > 1.16);
   const pinchD = d(P(4), P(8)) / sc;
-  // 拇指伸出程度：握拳时拇指包在掌心（0.7~1.4），捏合/OK 时明显外伸（2.3~4.6）
   const thumbAway = d(P(4), P(17)) / sc;
-  const pinching = pinchD < 0.68 && thumbAway > 1.55;
+  // 拇指伸直度（指尖比指间关节更远离手腕）：握拳时拇指包在掌里，比值很小
+  const thumbStraight = d(P(4), wrist) / Math.max(0.0001, d(P(3), wrist)) > 1.26;
+  const thumbSide = (P(5).y - P(4).y) > 0.015 || Math.abs(P(4).x - P(5).x) > 0.75 * sc;
+  // 捏合：指尖贴合 + 拇指没有缩进掌心 + 食指指尖离开手腕（排除握拳）
+  const pinching = pinchD < 0.68 && d(P(4), wrist) / sc > 0.9 && d(P(8), wrist) / sc > 1.05;
+  const thumbUp = thumbStraight && thumbSide && !pinching;
   const cnt = ext.filter(Boolean).length;
   let label = 'none';
   if (pinching && ext[1] && ext[2] && ext[3]) label = 'ok';
   else if (pinching) label = 'pinch';
-  else if (ext[0] && ext[1] && !ext[2] && !ext[3]) label = 'peace';
-  else if (ext[0] && !ext[1] && !ext[2] && !ext[3]) label = 'point';
-  else if (cnt >= 2) label = 'open';
-  else label = 'fist';
+  // 数字手势：1 食指 / 2 比耶 / 3 三指 / 4 四指 / 5 五指张开 / 6 拇指+小指
+  else if (thumbUp && !ext[0] && !ext[1] && !ext[2] && ext[3]) label = 'six';
+  else if (cnt === 1 && ext[0]) label = 'point';
+  else if (cnt === 2) label = 'two';
+  else if (cnt === 3) label = 'three';
+  else if (cnt === 4 && thumbUp) label = 'five';
+  else if (cnt === 4) label = 'four';
+  else if (cnt === 0 && !thumbUp) label = 'fist';
   const center = P(9);
-  let conf = 0.6;
+  let conf = 0.62;
   if (label === 'fist') conf = 0.55 + 0.45 * (1 - cnt / 4);
-  else if (label === 'open') conf = 0.55 + 0.45 * (cnt / 4);
-  else if (label !== 'none') conf = 0.82;
-  return { label, cnt, ext, thumbOut, pinchD, palm, cx: center.x, cy: center.y, tip: P(8), conf };
+  else if (label === 'none') conf = 0.35;
+  else if (label === 'pinch') conf = 0.78;
+  else if (label === 'ok') conf = 0.86;
+  else if (label !== 'ok' && label !== 'pinch') conf = 0.8;
+  return { label, cnt, ext, thumbUp, thumbStraight, pinching, thumbAway, pinchD, palm, cx: center.x, cy: center.y, tip: P(8), conf };
 }
 
 function tickHands(now) {
@@ -1671,7 +1916,7 @@ function tickHands(now) {
 
   if (!HANDS.hands.length) {
     HANDS.info = null;
-    if (HANDS.label !== 'none') { HANDS.pending = 'none'; HANDS.stable = 0; }
+    if (HANDS.label !== 'none') { HANDS.pending = 'none'; HANDS.stable = 0; HANDS.labelSince = now; }
     HANDS.label = 'none';
     S.label = 'none';
     S.conf = 0;
@@ -1687,8 +1932,12 @@ function tickHands(now) {
 
   if (info.label !== HANDS.pending) { HANDS.pending = info.label; HANDS.stable = 0; }
   else HANDS.stable++;
-  const need = HANDS.label === 'none' ? 2 : 3;
-  if (HANDS.stable >= need) HANDS.label = info.label;
+  // 手势刚出现要多看几帧（4 帧 ≈ 220ms）才敢定，避免手指过渡帧误判
+  const need = info.label === 'none' ? 2 : 4;
+  if (HANDS.stable >= need && HANDS.label !== info.label) {
+    HANDS.label = info.label;
+    HANDS.labelSince = now;
+  }
   S.label = HANDS.label;
   S.conf = HANDS.label === 'none' ? 0 : info.conf;
   camStat('检测到 ' + HANDS.hands.length + ' 只手 · 伸展 ' + info.cnt + '/4 · 判定 ' + info.label +
@@ -1697,6 +1946,24 @@ function tickHands(now) {
   applyHands(info);
   updateHud();
   drawSkeleton();
+}
+
+const FINGER_SHAPE = {
+  point: 'heart', two: 'star', three: 'flake', four: 'wreath', five: 'galaxy', six: 'text'
+};
+
+function handShapeTick(label, now, holdMs) {
+  const sh = FINGER_SHAPE[label];
+  if (!sh) return false;
+  // 画笔模式下手指优先落笔，只有五指张开才允许换形态
+  if (INK.on && label !== 'five') return false;
+  if (shapeNow === sh && S.spreadT > 0.25) return false;
+  if (now - (HANDS.labelSince || now) < (holdMs || 750)) return false;
+  if (now - (S.lastShapeAt || 0) < 1500) return false;
+  S.lastShapeAt = now;
+  S.spreadT = 1; S.galleryT = 0;
+  setShape(sh);
+  return true;
 }
 
 function applyHands(info) {
@@ -1717,36 +1984,33 @@ function applyHands(info) {
       if (!INK.on) { S.spreadT = 0; S.galleryT = 0; }   // 画笔模式下握拳=抬笔，不收回树
       S.rotVel = damp(S.rotVel, 0, 4, 0.016);
       break;
+    case 'two':
+    case 'three':
+    case 'four':
+    case 'six':
+      handShapeTick(label, now, 750);
+      break;
+    case 'five':
     case 'open':
       S.spreadT = 1; S.galleryT = 0;
       S.rotVel = Math.abs(info.cx - 0.5) < 0.07 ? 0 : (info.cx - 0.5) * -3.4;
+      handShapeTick('five', now, 750);
       break;
-    case 'peace': {
-      // 比耶：画笔模式下 = 换下一种笔色；否则换粒子形态
-      if (INK.on) {
-        if (now - (S.lastShapeAt || 0) > 900) { S.lastShapeAt = now; cycleInkColor(); }
-        break;
-      }
-      if (now - (S.lastShapeAt || 0) > 1900) {
-        S.lastShapeAt = now;
-        const idx = (SHAPE_ORDER.indexOf(shapeNow) + 1) % SHAPE_ORDER.length;
-        setShape(SHAPE_ORDER[idx]);
-      }
-      break;
-    }
-    case 'pinch': {
-      // 平滑捏合距离，避免单帧抖动导致画面忽远忽近
-      HANDS.pinchS = (HANDS.pinchS === undefined) ? info.pinchD : HANDS.pinchS * 0.78 + info.pinchD * 0.22;
-      S.distT = clamp(27 + (HANDS.pinchS - 0.42) * 75, 15, 44);
-      break;
-    }
     case 'point': {
-      if (INK.on) break; // 画笔模式下由主循环落笔，不炸烟花
-      if (now - HANDS.lastPoint > 850) {
+      if (INK.on) break;              // 画笔模式下由主循环落笔
+      if (now - HANDS.lastPoint > 900) {
         HANDS.lastPoint = now;
         const tip = info.tip;
         burstAtHand(tip.x, tip.y, 6);
       }
+      handShapeTick('point', now, 1150);   // 食指多举一会儿 → 爱心
+      break;
+    }
+    case 'pinch': {
+      if (PHOTOGRAB.sp) break;         // 正在抓照片时不缩放镜头
+      // 平滑捏合距离，避免单帧抖动导致画面忽远忽近
+      HANDS.pinchS = (HANDS.pinchS === undefined) ? info.pinchD : HANDS.pinchS * 0.78 + info.pinchD * 0.22;
+      S.distT = clamp(27 + (HANDS.pinchS - 0.42) * 75, 15, 44);
       break;
     }
     case 'ok': {
@@ -1767,8 +2031,16 @@ function applyHands(info) {
 }
 
 const gestureName = {
-  none: '等待手势', fist: '✊ 握拳 · 聚拢', open: '🖐 张开 · 星云',
-  point: '☝ 指星 · 烟花 / 落笔', ok: '👌 OK · 许愿 / 收工', peace: '✌ 比耶 · 换形态', pinch: '🤏 捏合 · 缩放'
+  none: '等待手势',
+  fist: '✊ 握拳 · 收成树',
+  point: '☝ 1 指 · 烟花 / 爱心',
+  two: '✌ 2 指 · 五角星',
+  three: '🖖 3 指 · 雪花',
+  four: '4 指 · 花环',
+  five: '🖐 5 指 · 星云',
+  six: '🤘 6 指 · MERRY',
+  ok: '👌 OK · 许愿 / 收工',
+  pinch: '🤏 捏合 · 缩放 / 抓照片'
 };
 function updateHud() {
   const g = HANDS.label;
@@ -1778,8 +2050,7 @@ function updateHud() {
   document.querySelectorAll('.gchip').forEach(c => {
     const k = c.dataset.g;
     const on = (k === 'both' && HANDS.hands.length > 1) ||
-      (k === 'move' && g === 'open') ||
-      (k !== 'move' && k !== 'both' && k === g);
+      (k !== 'both' && k !== 'move' && k === g);
     c.classList.toggle('on', on);
   });
 }
@@ -2216,6 +2487,7 @@ function setBrush(on) {
   $('brushBar').classList.toggle('show', on);
   $('btnBrush').classList.toggle('on', on);
   if (on) {
+    setTunePanel(false);                    // 画笔与调节面板互斥，避免右侧挤在一起
     if (demoMode) toggleDemo();
     if (!S.spreadLocked) { S.spreadT = 1; S.spread = 1; }
     S.galleryT = 0; S.rot = 0;
@@ -2272,6 +2544,11 @@ function updatePhotos(t) {
   const g = softstep(0.16, 0.94, Math.max(S.gallery, S.spread * 0.72));
   for (let i = 0; i < photos.length; i++) {
     const sp = photos[i];
+    if (PHOTOGRAB.sp === sp) {
+      const sc = sp.userData.size * 1.42;
+      sp.scale.set(sc, sc, 1);
+      continue;                              // 被抓着的照片由 tickPhotoGrab 控制位置
+    }
     const ang = (i / Math.max(1, photos.length)) * Math.PI * 2 + t * 0.06;
     galleryV.set(Math.sin(ang) * 9.4, 6.1 + Math.cos(ang * 2) * 1.8, Math.cos(ang) * 9.4);
     sp.position.lerpVectors(sp.userData.tree, galleryV, g);
@@ -2280,19 +2557,70 @@ function updatePhotos(t) {
   }
 }
 
+/* 手势抓取照片：捏合靠近任意一张即可抓住拖动，松手飞回原位 */
+const PHOTOGRAB = { sp: null, home: new THREE.Vector3(), hitD: 4.2 };
+function handTipLocal(info) {
+  if (!info || !info.tip) return null;
+  const nx = info.tip.x, ny = info.tip.y;
+  const w = screenToWorld(nx * 2 - 1, 1 - ny * 2, 0);
+  return tree.group.worldToLocal(w.clone());
+}
+function resetPhotoGrab() {
+  if (!PHOTOGRAB.sp) return;
+  PHOTOGRAB.sp.position.copy(PHOTOGRAB.home);
+  PHOTOGRAB.sp = null;
+}
+function photoScreenDist(sp, tip) {
+  const v = sp.position.clone();
+  sp.parent.localToWorld(v);
+  v.project(camera);
+  const sx = (v.x + 1) * 0.5, sy = 1 - (v.y + 1) * 0.5;
+  return Math.hypot(sx - tip.x, sy - tip.y);
+}
+function tickPhotoGrab(dt) {
+  const on = HANDS.running && HANDS.info;
+  const pinching = on && (HANDS.label === 'pinch' || HANDS.label === 'ok');
+  if (!PHOTOGRAB.sp) {
+    if (!pinching) return;
+    const tip = HANDS.info.tip;
+    let best = null, bestD = 0.13;
+    for (const sp of photos) {
+      const d = photoScreenDist(sp, tip);
+      if (d < bestD) { bestD = d; best = sp; }
+    }
+    if (best) {
+      PHOTOGRAB.sp = best;
+      PHOTOGRAB.home.copy(best.position);
+      toast('抓住一张照片 · 移动手掌带着走，松手归位', 2000);
+      sfxChime(0.9);
+    }
+    return;
+  }
+  const sp = PHOTOGRAB.sp;
+  if (pinching) {
+    const p = handTipLocal(HANDS.info);
+    if (p) sp.position.lerp(p, 1 - Math.exp(-10 * dt));
+  } else {
+    sp.position.lerp(PHOTOGRAB.home, 1 - Math.exp(-6.5 * dt));
+    if (sp.position.distanceTo(PHOTOGRAB.home) < 0.05) {
+      sp.position.copy(PHOTOGRAB.home);
+      PHOTOGRAB.sp = null;
+    }
+  }
+}
+
 function handleFiles(files) {
-  const room = PHOTO_SLOTS.length - photos.length;
-  const list = Array.from(files).filter(f => f && f.type && f.type.startsWith('image/')).slice(0, room);
-  if (!list.length) { toast(room <= 0 ? '树的挂位已经满了（最多 6 张）' : '没有读到图片'); return; }
+  const room = PHOTO_MAX - photos.length;
+  const list = Array.from(files).filter(f => f && f.type && f.type.startsWith('image/')).slice(0, Math.max(0, room));
+  if (!list.length) { toast(room <= 0 ? '挂位已满（最多 ' + PHOTO_MAX + ' 张），先在照片面板删掉一张' : '没有读到图片'); return; }
   list.forEach(f => {
     const url = URL.createObjectURL(f);
     const img = new Image();
     img.onload = () => {
       if (addPhoto(img, url)) {
-        toast('照片已挂上树 🎄');
+        toast('照片已挂上树 🎄 共 ' + photos.length + ' 张');
         S.galleryT = 0;
       } else {
-        toast('树的挂位满了');
         URL.revokeObjectURL(url);
       }
     };
@@ -2302,7 +2630,9 @@ function handleFiles(files) {
 }
 
 function openPhoto(sp) {
-  $('photoBig').src = sp.userData.src;
+  const src = typeof sp === 'string' ? sp : (sp && sp.userData ? sp.userData.src : '');
+  if (!src) return;
+  $('photoBig').src = src;
   $('photoModal').classList.add('show');
 }
 $('photoModal').addEventListener('click', () => {
@@ -2377,7 +2707,10 @@ $('btnCam').addEventListener('click', async () => {
     if (!ok) toast('摄像头没打开，可以用鼠标交互');
   }
 });
-$('btnPhoto').addEventListener('click', () => $('photoInput').click());
+$('btnPhoto').addEventListener('click', () => {
+  setPhotoPanel(true);
+  $('photoInput').click();
+});
 $('photoInput').addEventListener('change', e => {
   handleFiles(e.target.files);
   e.target.value = '';
@@ -2432,6 +2765,70 @@ $('btnUndo').addEventListener('click', inkUndo);
 $('btnClear').addEventListener('click', inkClear);
 $('btnShallow').addEventListener('click', () => setDepth(INK.depth - 0.8, true));
 $('btnDeep').addEventListener('click', () => setDepth(INK.depth + 0.8, true));
+
+/* ---------- 面板：粒子调节 / 照片管理 ---------- */
+function setTunePanel(on) {
+  const p = $('tunePanel');
+  if (!p) return;
+  p.classList.toggle('show', on);
+  const b = $('btnTune');
+  if (b) b.classList.toggle('on', on);
+  if (on) {
+    if (INK.on) setBrush(false);
+    syncTuneUI();
+  }
+}
+function setPhotoPanel(on) {
+  const p = $('photoPanel');
+  if (!p) return;
+  p.classList.toggle('show', on);
+  if (on) renderPhotoPanel();
+}
+
+const TUNE_UI = [
+  { id: 'rngCount', out: 'vCount', key: 'count', fmt: v => String(Math.round(v)) },
+  { id: 'rngSpeed', out: 'vSpeed', key: 'speed', fmt: v => v.toFixed(2) + '×' },
+  { id: 'rngBright', out: 'vBright', key: 'bright', fmt: v => v.toFixed(2) },
+  { id: 'rngContrast', out: 'vContrast', key: 'contrast', fmt: v => v.toFixed(2) },
+  { id: 'rngSize', out: 'vSize', key: 'size', fmt: v => v.toFixed(2) },
+  { id: 'rngGlow', out: 'vGlow', key: 'glow', fmt: v => v.toFixed(2) }
+];
+function syncTuneUI() {
+  TUNE_UI.forEach(it => {
+    const el = $(it.id);
+    if (!el) return;
+    const mn = parseFloat(el.min), mx = parseFloat(el.max);
+    TUNE[it.key] = clamp(TUNE[it.key], mn, mx);
+    el.value = String(TUNE[it.key]);
+    const o = $(it.out);
+    if (o) o.textContent = it.fmt(TUNE[it.key]);
+  });
+  if (bloomPass) bloomPass.strength = TUNE.glow;
+}
+TUNE_UI.forEach(it => {
+  const el = $(it.id);
+  if (!el) return;
+  el.addEventListener('input', () => {
+    const v = parseFloat(el.value);
+    TUNE[it.key] = v;
+    const o = $(it.out);
+    if (o) o.textContent = it.fmt(v);
+    if (it.key === 'count') scheduleRebuild();
+    else if (it.key === 'glow' && bloomPass) bloomPass.strength = v;
+    saveTune();
+  });
+});
+
+$('btnTune').addEventListener('click', () => setTunePanel(!$('tunePanel').classList.contains('show')));
+$('tpClose').addEventListener('click', () => setTunePanel(false));
+$('tpReset').addEventListener('click', () => {
+  Object.assign(TUNE, TUNE_DEFAULT);
+  syncTuneUI();
+  rebuildTree(TUNE_DEFAULT.count);
+  saveTune();
+  toast('粒子参数已恢复默认', 1800);
+});
+$('ppAdd').addEventListener('click', () => $('photoInput').click());
 
 // 文字编辑
 const nameEl = $('toName'), msgEl = $('toMsg');
@@ -2583,7 +2980,7 @@ function applyPerfTier(tier) {
   composer.setSize(innerWidth, innerHeight);
   bloomPass.setSize(innerWidth * 0.62, innerHeight * 0.62);
   bloomPass.enabled = tier > 0;
-  bloomPass.strength = tier >= 2 ? (LOW ? 0.42 : 0.55) : 0.4;
+  bloomPass.strength = tier >= 2 ? TUNE.glow : TUNE.glow * 0.72;
   syncPixel();
   if (tier === 0) toast('已关闭泛光以保证流畅', 2200);
   else if (tier === 1) toast('已降低渲染精度以保证流畅', 2200);
@@ -2594,7 +2991,11 @@ function frame() {
   const nowMs = performance.now();
   const dt = Math.min(0.05, clock.getDelta());
   const t = clock.elapsedTime;
-  U.uTime.value = t;
+  // 粒子飘动速度独立于真实时间，供滑杆调节
+  U.uTime.value += dt * TUNE.speed;
+  U.uBright.value = TUNE.bright;
+  U.uContrast.value = TUNE.contrast;
+  U.uSizeK.value = TUNE.size;
 
   if (HANDS.running) tickHands(performance.now());
 
@@ -2678,7 +3079,7 @@ function frame() {
 
   // 指尖 / 鼠标牵引：靠近指端的粒子被推开
   const tipActive = HANDS.running && HANDS.info &&
-    (HANDS.label === 'point' || HANDS.label === 'open' || HANDS.label === 'pinch');
+    (HANDS.label === 'point' || HANDS.label === 'open' || HANDS.label === 'five' || HANDS.label === 'pinch');
   if (tipActive) {
     const tip = HANDS.info.tip;
     tree.uni.uPointer.value.copy(screenToWorld(tip.x * 2 - 1, (1 - tip.y) * 2 - 1));
@@ -2689,6 +3090,7 @@ function frame() {
   }
 
   updatePhotos(t);
+  tickPhotoGrab(dt);
   fireworks.update(dt);
 
   // 自动氛围烟花（不发声）
@@ -2774,10 +3176,24 @@ function demoPhotos() {
   });
 }
 
+/* 调试入口（?debug=1）：给共创者/自动化测试直接调用内部逻辑 */
+if (/[?&]debug=1/.test(location.search)) {
+  window.__xmas = {
+    analyze, applyHands, handShapeTick, HANDS, S, TUNE, tree: () => tree, INK,
+    setShape, rebuildTree, PHOTOGRAB, SHAPE_ORDER, FINGER_SHAPE,
+    tickPhotoGrab, handTipLocal, photos: () => photos, camera
+  };
+}
+
 $('loadBar').style.width = '45%';
 
 (function boot() {
   const params = new URLSearchParams(location.search);
+
+  // 套用上次保存的粒子参数（数量变了就重建一次）
+  syncTuneUI();
+  if (Math.abs(TUNE.count - tree.meta.kind.length) > 400) rebuildTree(TUNE.count);
+  U.uTime.value = Math.random() * 40;
   const nameParam = params.get('to');
   let storedName = '', storedMsg = '';
   try {
@@ -2859,4 +3275,5 @@ frame();
 </script>
 </body>
 </html>
+
 
