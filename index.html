@@ -374,10 +374,11 @@ html,body{overscroll-behavior:none}
   .swatch.on{box-shadow:0 0 0 2px rgba(255,232,190,.85)}
 
   /* 祝福卡：避让顶栏，窄一点 */
-  .wish{left:12px;top:78px;width:min(212px,54vw)}
+  .wish{left:10px;top:74px;width:min(212px,54vw);padding:10px 12px 12px;border-radius:14px;
+    background:linear-gradient(180deg,rgba(3,8,16,.30),rgba(3,8,16,0) 88%)}
   .wish .to{font-size:8px;letter-spacing:.3em}
-  .wish .name{font-size:19px}
-  .wish .msg{font-size:11px;line-height:1.85;margin-top:7px}
+  .wish .name{font-size:19px;text-shadow:0 1px 10px rgba(0,0,0,.85)}
+  .wish .msg{font-size:11px;line-height:1.85;margin-top:7px;text-shadow:0 1px 8px rgba(0,0,0,.8)}
   .wish .meta{margin-top:8px;font-size:8px}
 
   /* 底部两条：单行滑动，贴安全区 */
@@ -386,6 +387,9 @@ html,body{overscroll-behavior:none}
     overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   .gesturebar::-webkit-scrollbar{display:none}
   .gchip{flex:0 0 auto;font-size:9.5px;padding:5px 8px;gap:4px;border-radius:999px}
+  #tunePanel,#photoPanel{scrollbar-width:thin;scrollbar-color:rgba(255,214,150,.45) transparent}
+  #tunePanel::-webkit-scrollbar,#photoPanel::-webkit-scrollbar{width:4px}
+  #tunePanel::-webkit-scrollbar-thumb,#photoPanel::-webkit-scrollbar-thumb{background:rgba(255,214,150,.45);border-radius:4px}
   .gchip b{font-size:9.5px}
 
   .shapebar{left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 44px);
