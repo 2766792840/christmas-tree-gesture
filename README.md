@@ -4,6 +4,22 @@
 
 一个 **单文件** 的圣诞粒子世界：不用任何外部素材、双击即开。握拳聚成树、张开散作星云、手掌横移转整圈、指尖落笔写字，画完还能用手势继续转着看。
 
+<p align="center">
+  <a href="https://2766792840.github.io/christmas-tree-gesture/"><b>🌐 在线体验 · Live Demo</b></a> ·
+  <a href="https://github.com/2766792840/christmas-tree-gesture/issues/new/choose">报 Bug</a> ·
+  <a href="https://github.com/2766792840/christmas-tree-gesture/discussions">聊想法</a> ·
+  <a href="https://github.com/2766792840/christmas-tree-gesture">Star ⭐</a>
+</p>
+
+<p align="center">
+  <img alt="live" src="https://img.shields.io/badge/demo-live-brightgreen" />
+  <img alt="single file" src="https://img.shields.io/badge/single--file-HTML-e34f26" />
+  <img alt="license" src="https://img.shields.io/badge/license-MIT-blue" />
+  <img alt="prs" src="https://img.shields.io/badge/PRs-welcome-brightgreen" />
+</p>
+
+> ⚠️ 手势需要摄像头权限，浏览器只在 **https 或 127.0.0.1 / localhost** 下才给——所以别直接双击 `file://` 打开，用上面的 Live Demo，或本地起 `tools/serve.ps1`。
+
 <p>
 <img src="01-tree.png" width="49%" alt="粒子圣诞树" />
 <img src="02-heart.png" width="49%" alt="爱心形态" />
