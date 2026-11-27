@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 想聊两句 / 不确定算不算 bug
+    url: https://github.com/2766792840/christmas-tree-gesture/discussions
+    about: 来 Discussions 开个帖，比对着表单填更轻松；新玩法、新形态的头脑风暴也欢迎。
+  - name: 🌐 先在线玩一遍再反馈
+    url: https://2766792840.github.io/christmas-tree-gesture/
+    about: 线上版本是最新的 main 分支，先把现象复现一遍能帮我们省很多来回。
