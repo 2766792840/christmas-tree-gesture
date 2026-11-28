@@ -16,8 +16,8 @@ Production still ships the V2.2 default path; V3 capabilities are merged into `m
 | GPU readback diagnostics (submit / queue / map / copy) | done | same |
 | Vertex interpolation between snapshots | done | `?interp=0` turns it off |
 | GPU-resident particles (WebGL2 FBO GPGPU, zero readback) | PoC working | `?backend=fbo` |
-| Engine module split / drop `@ts-nocheck` | in progress | — |
-| One Euro filter + unified gesture FSM | pending | — |
+| One Euro filter + unified gesture FSM | implemented, real-hand tuning pending | `?oe=0` off / `?oeBeta` to tune |
+| Engine module split / drop `@ts-nocheck` | in progress (gesture path extracted) | — |
 
 Measured on an Intel UHD iGPU, 1440×900, DPR 1, 26k particles, 3×30 s:
 

@@ -108,7 +108,15 @@ const buildArtifacts = await readBuildArtifacts();
 const outputDir = path.resolve('benchmark-results');
 await fs.mkdir(outputDir, { recursive: true });
 // 默认用本机安装的 Chrome（WebGPU 在 Playwright 自带 Chromium 上常被禁用），装不上再退回自带内核
-const launchArgs = ['--enable-unsafe-webgpu'];
+// 关掉后台/遮挡节流：否则窗口一旦被别的窗口盖住，rAF 会掉到 1 Hz，p99 会凭空多出 1000 ms 的假停顿
+const launchArgs = [
+  '--enable-unsafe-webgpu',
+  '--disable-background-timer-throttling',
+  '--disable-backgrounding-occluded-windows',
+  '--disable-renderer-backgrounding',
+  // Windows 的原生遮挡检测会把被盖住的窗口降到 1 Hz，量帧时间前必须关掉
+  '--disable-features=CalculateNativeWinOcclusion,IntensiveWakeUpThrottling'
+];
 let browser;
 try {
   browser = await chromium.launch({ headless, channel: channelArg, args: launchArgs });
@@ -203,6 +211,8 @@ try {
 
     const navStart = Date.now();
     await page.goto(target.toString(), { waitUntil: 'load', timeout: 60000 });
+    // 非 headless 时把窗口提到前台，否则被遮挡的窗口会掉到 1 Hz
+    if (!headless) await page.bringToFront().catch(() => {});
     await page.locator('#scene').waitFor({ state: 'attached', timeout: 20000 }).catch(() => {});
     // 等应用自检说后端就绪，再开始预热；否则会把加载期的掉帧算进采样
     await page.waitForFunction(() => {

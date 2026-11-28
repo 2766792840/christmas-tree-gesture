@@ -46,6 +46,20 @@ export interface BackendState {
   active: boolean;
   ready: boolean;
   error: string;
+  /** ?backend=fbo 时为 true：粒子位置常驻显存，无回读 */
+  gpuResident?: boolean;
+  readbackHz?: number;
+}
+
+export interface GestureDebugState {
+  state: 'IDLE' | 'CANDIDATE' | 'ACTIVE' | 'COOLDOWN';
+  committed: string;
+  candidate: string;
+  confEma: number;
+  filtersLive: boolean;
+  cooldownLeftMs: number;
+  hasSample: boolean;
+  config: Record<string, number | boolean>;
 }
 
 export interface SceneStats {
@@ -100,6 +114,8 @@ export interface AuroraApi {
   isRecording(): boolean;
   stats(): SceneStats;
   camera: { running: boolean };
+  /** 手势控制器状态（One Euro + 迟滞 FSM），真机调参用 */
+  gesture(): GestureDebugState;
 }
 
 declare global {

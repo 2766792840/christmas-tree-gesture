@@ -16,8 +16,8 @@
 | GPU 回读诊断（submit / queue / map / copy） | 已完成 | 同上 |
 | 顶点插值（两次快照间平滑） | 已完成 | `?interp=0` 关闭 |
 | GPU-resident 粒子（WebGL2 FBO GPGPU，零回读） | PoC 已跑通 | `?backend=fbo` |
-| Engine 模块拆分 / 移除 `@ts-nocheck` | 进行中 | — |
-| One Euro 滤波 + 统一手势 FSM | 待做 | — |
+| One Euro 滤波 + 统一手势 FSM | 已实现，真机轨迹待校准 | `?oe=0` 关闭 / `?oeBeta` 调参 |
+| Engine 模块拆分 / 移除 `@ts-nocheck` | 进行中（手势链路已拆出） | — |
 
 实测（Intel UHD 核显、1440×900、DPR 1、26k 粒子、3×30 s）：
 

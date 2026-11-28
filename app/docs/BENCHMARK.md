@@ -25,6 +25,16 @@ GPU：ANGLE (Intel, Intel(R) UHD Graphics, D3D11)。每组 3 轮 × 30 s，预�
 | **FBO GPGPU（GPU-resident，`?backend=fbo`）** | 22.1 | 22.3 | 22.5 | 0（无回读） | 三轮均 0 长任务，>33ms 仅 0.25% |
 | WebGL2（对照，无回读） | 22.1 | 22.4 | 33.2 | — | 说明 22.1 ms 是本机帧节奏上限 |
 
+## 测量前提（踩过的坑）
+
+**必须让被测窗口保持前台。** 2026-11-28 复测时出现过整轮 1 Hz（p50 = 1011 ms）的"假停顿"：
+Chrome 的 Windows 原生遮挡检测会把被盖住/锁屏后的窗口降到 1 fps，跟渲染无关。
+`scripts/benchmark.mjs` 已加 `--disable-backgrounding-occluded-windows`、
+`--disable-features=CalculateNativeWinOcclusion,IntensiveWakeUpThrottling` 并在每轮 `bringToFront()`；
+即便如此，机器锁屏或长时间无人操作时仍可能掉帧，跑之前最好先动一下鼠标确认窗口是活的。
+
+另外：`--headless` 量出来的数是 11 ms / 82 fps，**不能拿来比较**——headless 没有 vsync，rAF 会跑满。
+
 ## 怎么读这份数据
 
 - `p50` 相同说明两边都在同一帧节奏上跑，比较 p50 没有意义；

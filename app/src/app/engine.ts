@@ -11,6 +11,7 @@ import { PingPongParticles } from '../webgpu/compute';
 import { resolveBackend } from '../core/backend';
 import { benchRecord, benchCount } from '../dev/bench';
 import { FboParticles } from '../webgl/fboParticles';
+import { GestureController } from '../core/gestureController';
 
 const $ = (id) => document.getElementById(id);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -1423,9 +1424,22 @@ const CONN = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,1
 const HANDS = {
   video: null, canvas: null, ctx: null,
   stream: null, model: null, ready: false, running: false, loading: false,
-  last: 0, hands: [], label: 'none', pending: 'none', stable: 0, info: null,
+  last: 0, hands: [], label: 'none', info: null,
   labelSince: 0, prevLabel: 'none', lastPoint: 0, lastWish: 0, aspect: 1.333
 };
+
+/* 手势交互控制器（One Euro + 迟滞状态机）。调参入口：
+   ?oe=0 关滤波与保持（A/B 对照） · ?oeHold=170 候选保持 ms · ?oeEnter=0.55 进入置信度
+   ?oeExit=0.34 质量下限 · ?oeBeta=2.0 跟手系数 · ?oeMin=1.2 静止截止频率(Hz) */
+const OE_PARAMS = new URLSearchParams(location.search);
+const CTRL = new GestureController({
+  enabled: OE_PARAMS.get('oe') !== '0',
+  enterHoldMs: Number(OE_PARAMS.get('oeHold')) || undefined,
+  enterConf: Number(OE_PARAMS.get('oeEnter')) || undefined,
+  exitConf: Number(OE_PARAMS.get('oeExit')) || undefined,
+  cx: { beta: Number(OE_PARAMS.get('oeBeta')) || undefined, minCutoff: Number(OE_PARAMS.get('oeMin')) || undefined },
+  cy: { beta: Number(OE_PARAMS.get('oeBeta')) || undefined, minCutoff: Number(OE_PARAMS.get('oeMin')) || undefined }
+});
 
 function camStat(msg, warn) {
   const el = $('camStat');
@@ -1444,7 +1458,7 @@ function camPanel(on) {
 async function enableHands() {
   if (HANDS.running) return true;
   if (HANDS.loading) return false;
-  if (!window.isSecureContext) {
+  CTRL.reset();  if (!window.isSecureContext) {
     camStat('file:// 直接打开时浏览器禁止摄像头。请用 http://localhost 打开本页', true);
     toast('手势需要安全上下文：在文件夹里运行 python -m http.server 8765，再访问 http://localhost:8765/圣诞树.html', 6000);
     return false;
@@ -1529,6 +1543,7 @@ function disableHands() {
   HANDS.hands = [];
   HANDS.label = 'none';
   S.label = 'none';
+  CTRL.reset();
 }
 
 function analyze(lm, aspect, world) {
@@ -1653,9 +1668,10 @@ function tickHands(now) {
 
   if (!HANDS.hands.length) {
     HANDS.info = null;
-    if (HANDS.label !== 'none') { HANDS.pending = 'none'; HANDS.stable = 0; HANDS.labelSince = now; }
-    HANDS.label = 'none';
-    S.label = 'none';
+    const out = CTRL.lost(now);
+    if (HANDS.label !== out.label) HANDS.labelSince = out.since || now;
+    HANDS.label = out.label;
+    S.label = out.label;
     S.conf = 0;
     S.rotVel = 0;
     camStat('模型就绪 · 未检测到手（把手抬进画面，离镜头 40–80cm）');
@@ -1667,19 +1683,23 @@ function tickHands(now) {
   const info = analyze(HANDS.hands[0], HANDS.aspect, res.worldLandmarks && res.worldLandmarks[0]);
   HANDS.info = info;
 
-  if (info.label !== HANDS.pending) { HANDS.pending = info.label; HANDS.stable = 0; }
-  else HANDS.stable++;
-  // 手势刚出现要多看几帧（4 帧 ≈ 220ms）才敢定，避免手指过渡帧误判
-  const need = info.label === 'none' ? 2 : 4;
-  if (HANDS.stable >= need && HANDS.label !== info.label) {
-    HANDS.label = info.label;
-    HANDS.labelSince = now;
-  }
-  S.label = HANDS.label;
-  S.conf = HANDS.label === 'none' ? 0 : info.conf;
+  // One Euro + 状态机：原始 label 先过迟滞/保持/置信度，坐标再走自适应滤波
+  const out = CTRL.update({
+    label: info.label, conf: info.conf,
+    cx: info.cx, cy: info.cy, pinchD: info.pinchD, palm: info.palm,
+    t: now
+  });
+  if (HANDS.label !== out.label) HANDS.labelSince = out.since || now;
+  HANDS.label = out.label;
+  info.cx = out.cx;
+  info.cy = out.cy;
+  info.pinchD = out.pinchD;
+  info.palm = out.palm;
+  S.label = out.label;
+  S.conf = out.conf;
   camStat('检测到 ' + HANDS.hands.length + ' 只手 · 指 ' + info.ext.map(x => x ? '1' : '0').join('') +
     ' · 拇指 ' + Math.round(info.thumbAng) + '°' + (info.thumbUp ? '开' : '收') +
-    ' · ' + info.label + (HANDS.hands.length > 1 ? '（双手缩放）' : ''));
+    ' · ' + out.label + ' · ' + out.state + (HANDS.hands.length > 1 ? '（双手缩放）' : ''));
 
   applyHands(info);
   updateHud();
@@ -1736,7 +1756,6 @@ function handShapeTick(label, now, holdMs) {
 function applyHands(info) {
   const label = HANDS.label;
   const now = performance.now();
-  if (label !== 'pinch') HANDS.pinchS = undefined;
 
   // 双手：距离决定镜头远近
   if (HANDS.hands.length >= 2) {
@@ -1775,9 +1794,8 @@ function applyHands(info) {
     }
     case 'pinch': {
       if (PHOTOGRAB.sp) break;         // 正在抓照片时不缩放镜头
-      // 平滑捏合距离，避免单帧抖动导致画面忽远忽近
-      HANDS.pinchS = (HANDS.pinchS === undefined) ? info.pinchD : HANDS.pinchS * 0.78 + info.pinchD * 0.22;
-      S.distT = clamp(BASE_D + (HANDS.pinchS - 0.42) * 75, DIST_MIN, DIST_MAX);
+      // pinchD 已由 One Euro 滤波（原来这里还有一层 0.78 指数平滑，双层会让缩放明显滞后）
+      S.distT = clamp(BASE_D + (info.pinchD - 0.42) * 75, DIST_MIN, DIST_MAX);
       break;
     }
     case 'ok': {
@@ -3471,8 +3489,10 @@ const api = {
     backendError: GPU.error
   }),
   camera: HANDS,
+  // 手势控制器：真机调参 / 离线回放自测都读这里
+  gesture: () => CTRL.debug(),
   // 调试用内部句柄
-  debug: { S, TUNE, tree: () => tree, INK, PHOTOGRAB, FSM, analyze, applyHands, handShapeTick, tickPhotoGrab, screenToWorld, scene, renderer, camera }
+  debug: { S, TUNE, tree: () => tree, INK, PHOTOGRAB, FSM, CTRL, analyze, applyHands, handShapeTick, tickPhotoGrab, screenToWorld, scene, renderer, camera }
 };
 window.__aurora = api;
 
