@@ -104,6 +104,7 @@ interface FrameBuffers {
   vel: GPUBuffer;
   staging: GPUBuffer;
   mapped: boolean;
+  ready: boolean;
 }
 
 export class PingPongParticles {
@@ -146,12 +147,14 @@ export class PingPongParticles {
       {
         pos: mk(), vel: mk(),
         staging: device.createBuffer({ size: bytes, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST }),
-        mapped: false
+        mapped: false,
+        ready: false
       },
       {
         pos: mk(), vel: mk(),
         staging: device.createBuffer({ size: bytes, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST }),
-        mapped: false
+        mapped: false,
+        ready: false
       }
     ];
 
@@ -216,6 +219,9 @@ export class PingPongParticles {
     const srcIdx = this.flip;
     const bind = srcIdx === 0 ? this.bindA : this.bindB;
     const dst = this.frames[1 - srcIdx];
+    // staging 还在 map 状态时不能往里拷：WebGPU 会报 "used in submit while mapped"，
+    // 且数据会覆盖掉正在读的那一帧。这一帧跳过回读，下一帧再补。
+    const canCopy = !dst.mapped && !dst.ready;
 
     const enc = this.device.createCommandEncoder();
     const pass = enc.beginComputePass();
@@ -223,28 +229,27 @@ export class PingPongParticles {
     pass.setBindGroup(0, bind);
     pass.dispatchWorkgroups(Math.ceil(this.count / 64));
     pass.end();
-    enc.copyBufferToBuffer(dst.pos, 0, dst.staging, 0, this.count * 16);
+    if (canCopy) enc.copyBufferToBuffer(dst.pos, 0, dst.staging, 0, this.count * 16);
     this.queue.submit([enc.finish()]);
 
     this.flip = 1 - this.flip;
-    this.requestReadback(dst);
+    if (canCopy) this.requestReadback(dst);
   }
 
   private requestReadback(frame: FrameBuffers): void {
     if (frame.mapped) return;
     frame.mapped = true;
-    frame.staging.mapAsync(GPUMapMode.READ)
-      .then(() => {
-        // 交给 readPositions() 消费
-        (frame as any).__ready = true;
-      })
+    // 等这次 submit 真正跑完再 map，避免映射仍在用的 buffer
+    this.queue.onSubmittedWorkDone()
+      .then(() => frame.staging.mapAsync(GPUMapMode.READ))
+      .then(() => { frame.ready = true; })
       .catch(() => { frame.mapped = false; });
   }
 
   /** 取回一帧位置到 out（vec3 交错），返回是否拿到了新数据 */
   readInto(out: Float32Array): boolean {
     for (const f of this.frames) {
-      if (!(f as any).__ready) continue;
+      if (!f.ready) continue;
       const src = f.staging.getMappedRange();
       const v = new Float32Array(src);
       for (let i = 0, j = 0; i < this.count; i++, j += 4) {
@@ -253,7 +258,7 @@ export class PingPongParticles {
         out[i * 3 + 2] = v[j + 2];
       }
       f.staging.unmap();
-      (f as any).__ready = false;
+      f.ready = false;
       f.mapped = false;
       return true;
     }

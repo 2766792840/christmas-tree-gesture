@@ -72,6 +72,7 @@ function walk(root: Node): void {
 
 /** 对全页 / 子树生效，可反复调用（已翻译过的节点会跳过或还原） */
 export function applyLang(root: Node = document.documentElement): void {
+  document.documentElement.lang = currentLang() === 'en' ? 'en' : 'zh-CN';
   applying = true;
   try { walk(root); } finally { applying = false; }
 }
