@@ -86,8 +86,8 @@ await mob.close();
 
 // 录一段动图素材（webm，稍后用 ffmpeg 转 gif）
 const vid = await browser.newContext({
-  viewport: { width: 960, height: 600 },
-  recordVideo: { dir: path.join(OUT, '..', 'tmp-video'), size: { width: 960, height: 600 } }
+  viewport: { width: 1280, height: 800 },
+  recordVideo: { dir: path.join(OUT, '..', 'tmp-video'), size: { width: 1280, height: 800 } }
 });
 const vpage = await vid.newPage();
 await vpage.goto(BASE + '/?field=2&demo=1');
@@ -97,7 +97,7 @@ await vpage.waitForTimeout(800);
 await vpage.mouse.move(300, 500);
 for (let i = 0; i <= 40; i++) {
   const t = (i / 40) * Math.PI * 2;
-  await vpage.mouse.move(480 + Math.cos(t) * 220, 330 + Math.sin(t) * 150, { steps: 3 });
+  await vpage.mouse.move(640 + Math.cos(t) * 260, 360 + Math.sin(t) * 190, { steps: 3 });
   await vpage.waitForTimeout(70);
 }
 await vpage.waitForTimeout(1200);
