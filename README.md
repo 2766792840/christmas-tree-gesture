@@ -1,171 +1,130 @@
-# Christmas Tree · 手势粒子圣诞树（hand gesture · single HTML file）
+# Aurora Tree Studio V2.2 · 手势粒子圣诞树（工程版）
 
-> A single-file **christmas tree** built with **three.js** and tens of thousands of **particles**, controlled by **hand gesture** recognition through your **webcam** — powered by **mediapipe**, **no install**, one **single html file**: 26,000 particles you can tune live, six morphable shapes driven by **1–6 fingers**, 360° free rotation, photos floating as **particle planets** you can **pinch out of the sky**, and a **3D particle brush** that draws with your fingertip.
+**中文** | [English](README.en.md)
 
-一个 **单文件** 的圣诞粒子世界：不用任何外部素材、双击即开。伸 1 根手指变爱心、2 根变星星、3 根变雪花、4 根变花环、5 根变星云、6 根变 MERRY；握拳收回成树，捏合推拉镜头、还能把漂浮的照片星球"捏"下来拖着走；指尖落笔写字，画完转着看。
+浏览器端的 3D 粒子圣诞树工作台：手势 / 鼠标驱动粒子力场、照片记忆球、3D 笔迹、场景编辑器与作品导出。按《Aurora_Tree_Studio_V2 技术升级改造方案》落地，是**从单文件 demo 迁到 Vite + TypeScript 工程骨架**的版本。
 
-<p align="center">
-  <a href="https://2766792840.github.io/christmas-tree-gesture/"><b>🌐 在线体验 · Live Demo</b></a> ·
-  <a href="https://github.com/2766792840/christmas-tree-gesture/issues/new/choose">报 Bug</a> ·
-  <a href="https://github.com/2766792840/christmas-tree-gesture/discussions">聊想法</a> ·
-  <a href="https://github.com/2766792840/christmas-tree-gesture">Star ⭐</a>
-</p>
+网页本身也是双语的：工具栏的 `EN / 中文` 按钮一键切换，`?lang=en` / `?lang=zh` 可强制语言，选择会记在 localStorage。
 
-<p align="center">
-  <img alt="live" src="https://img.shields.io/badge/demo-live-brightgreen" />
-  <img alt="single file" src="https://img.shields.io/badge/single--file-HTML-e34f26" />
-  <img alt="license" src="https://img.shields.io/badge/license-MIT-blue" />
-  <img alt="prs" src="https://img.shields.io/badge/PRs-welcome-brightgreen" />
-</p>
+## 仓库结构
 
-> ⚠️ 手势需要摄像头权限，浏览器只在 **https 或 127.0.0.1 / localhost** 下才给——所以别直接双击 `file://` 打开，用上面的 Live Demo，或本地起 `tools/serve.ps1`。
+```
+index.html          # 线上页面（已构建，GitHub Pages 直接读这里）
+assets/             # 已构建的 js / css
+app/                # Vite + TypeScript 工程源码，开发与构建都在这里
+legacy/v1/          # V1 单文件版归档（旧页面、截图、文档、本地预览脚本）
+```
 
-<p align="center">
-  <img src="demo.gif" width="100%" alt="演示：比耶把圣诞树散成爱心，指尖在 3D 空间里画一笔金色签名，再转着看" />
-</p>
+线上地址：<https://2766792840.github.io/christmas-tree-gesture/>（若 Pages 未指向根目录，见文末说明）。
 
-<p>
-<img src="01-tree.png" width="49%" alt="粒子圣诞树" />
-<img src="02-heart.png" width="49%" alt="爱心形态" />
-</p>
-<p>
-<img src="03-ink-front.png" width="49%" alt="指尖粒子签名" />
-<img src="04-ink-3d.png" width="49%" alt="签名随视角旋转" />
-</p>
-<p align="center">
-<img src="05-panel.png" width="100%" alt="花环形态 + 右侧 8 条粒子/照片调节滑杆 + 左下照片管理面板（可加、可隐藏、可删除）" />
-</p>
-
----
-
-## ✨ 它有什么
-
-| 模块 | 说明 |
-| --- | --- |
-| **粒子树** | 单 `Points` 承载 26,000 粒子（6,000–42,000 可调），自定义 ShaderMaterial；**7 层树冠 + 每层下沿亮边 + 5 道金线螺旋 + 84 颗彩球 + 树顶五角星**，全部同一 draw call |
-| **六种形态** | 爱心 / 五角星 / 雪花 / **花环** / 星云 / MERRY 文字，两套 position buffer 做 `mix` 过渡，约 0.65 s 完成形变 |
-| **数字手势 1–6** | 伸几根手指就是第几个形态，拇指+小指 = 6；判据用 **3D 世界坐标 + 指节夹角 + 拇指/掌轴夹角**三重校验，拇指贴掌或藏进掌心都不会误判；手势保持 ~0.7 s 生效，换形态 1.5 s 冷却 |
-| **粒子调节面板** | 右侧 8 条滑杆实时调 数量 / 飘动速度 / 亮度 / 对比度 / 粒子大小 / 泛光强度 / **照片大小 / 照片透明度**，参数存 localStorage，下次打开还是你的口味 |
-| **照片星球** | 最多 10 张，按 Fibonacci 球面均匀分布飘在树周围，缓慢公转 + 呼吸；圆形羽化贴图 + 外圈星尘点阵，看起来像被粒子托住的星球，不再是突兀的方块相框 |
-| **照片管理** | 左下缩略图网格可加可删（拖动文件到窗口也能加），每张还能 **隐藏（◉/◌ 眼）**、删除（×）、点开看大图；隐藏后不参与抓取 |
-| **照片手势抓取** | 捏合对准某颗照片星球即可抓下来，手掌移动它就跟着走，松手飞回球面轨道 |
-| **360° 自由旋转** | 手掌横向平移即匀速转圈（带死区防抖），角度无限累积；鼠标拖拽同样不设限 |
-| **手势识别** | MediaPipe HandLandmarker，21 关键点 + `worldLandmarks` 3D 坐标；识别握拳 / 五指 / 1–6 数字 / 捏合 / OK，全部本地推理 |
-| **3D 粒子画笔** | 食指作笔，笔迹是 **有体积的粒子簇**，落在与当前视角对齐的平面上；每抬一笔自动换一层（±0.85），滚轮 / ↑↓ / 面板按钮可手动换层，转到任意角度都能继续画，多层笔迹自然交叉成真正的空间结构 |
-| **参考层圆环** | 画笔模式显示当前落笔深度的淡色圆环，让你知道自己在三维空间的哪一层画 |
-| **相机与氛围** | 泛光（UnrealBloom）、极光雾、飘雪、烟花、八音盒合成音乐（WebAudio，无音频文件） |
-| **祝福卡片** | 左上 TO / 祝福文案 / 日期可编辑，`?to=名字` 直接生成给某人的版本 |
-| **存图 / 演示** | 一键导出当前画面 PNG；演示模式自动环绕 + 每 8 秒轮换形态 |
-| **手机竖屏适配** | 三档断点（900 / 760 / 380px）独立排版：顶栏横向滑动、底部手势条与形态条单行滚动、调节与照片面板变底部抽屉（48vh / 44vh 上限，树始终露在上面）、摄像头小窗收进右上角、`safe-area-inset-bottom` 让贴底条不被 Home 横条挡住；触屏自动降像素比到 1.2、粒子基数下调，手指拖拽即旋转、双指缩放 |
-
-## 🖐 手势对照
-
-| 手势 | 效果 |
-| --- | --- |
-| ☝ **1 指** | 落笔 / 点放烟花；举着约 1.1 s → 爱心 |
-| ✌ **2 指** | 五角星 |
-| 🖖 **3 指** | 雪花 |
-| **4 指**（拇指收进掌心） | 花环 |
-| 🖐 **5 指**（拇指翘出去，别贴着手掌） | 星云（可横移旋转） |
-| 🤘 **6 指**（拇指 + 小指，其余三指收） | MERRY 文字 |
-| ✊ 握拳 | 星尘聚成圣诞树（画笔模式下 = 抬笔） |
-| 🤏 捏合 | 推远拉近镜头；对准照片星球时 = 抓住它拖着走，松手归位 |
-| 👌 OK | 收下一句心愿（画笔模式下 = 收工，作品保留） |
-| 🙌 双手 | 距离决定缩放整个场景 |
-
-> 手势要**保持约 0.7 秒**才判定（连拍 4 帧一致），避免手指过渡那一瞬间误切形态；嫌慢可以在 `handShapeTick()` 里调 `holdMs`。
-> 识别不准时看摄像头小窗第二行：`指 11111 · 拇指 62°开 · five` —— 五个 0/1 是四指伸展、后面的角度是拇指与掌轴的夹角，一眼能看出是哪根手指没被判开。
-
-## ⌨️ 快捷键
-
-`空格` 聚散 · `1`–`6` 换形态（1 爱心 / 2 星 / 3 雪花 / 4 花环 / 5 星云 / 6 MERRY） · `p` 画笔 · `z` 撤销一笔 · `i` 示例签名 · `↑`/`↓` 换落笔层 · `l` 锁定自动换层 · `d` 演示 · `e` 存图 · `f` 烟花 · `c` 摄像头 · `m` 静音 · `h` 净屏 · `g` 画廊 · `r` 复位视角
-
-## 🔗 URL 参数（可直接分享）
-
-| 参数 | 作用 |
-| --- | --- |
-| `?to=Name` | 祝福卡片署名 |
-| `?shape=heart\|star\|flake\|wreath\|galaxy\|text` | 直接进入某个形态 |
-| `?ink=1` | 自动打开画笔并画两笔示例（红 + 青） |
-| `?spread=0~1` | 指定聚散程度 |
-| `?demo=1` | 自动挂 3 张示例照片 + 形态轮播 |
-| `?debug=1` | 暴露 `window.__xmas`（`analyze()` / `TUNE` / `PHOTOGRAB` 等），方便调试与自动化测试 |
-| `?show=1` | 跳过开场引导 |
-| `?perf=0` | 关闭帧率自动降档（截图/演示时用） |
-| `?rot=1.2` | 指定初始旋转角（rad） |
-| `?hide=sky,snow,fw,treeGroup` | 调试用，隐藏指定图层 |
-
-## 🚀 开始
-
-**在线体验（推荐）**：GitHub Pages 部署后是 `https://`，摄像头可直接使用。
-
-**本地运行**：`file://` 打开会被浏览器禁用摄像头，请用任意本地服务：
+## 运行
 
 ```bash
-python -m http.server 8765
-# 然后访问 http://127.0.0.1:8765/
+cd app
+npm install
+npm run dev        # http://127.0.0.1:8782
+npm run typecheck  # tsc --noEmit
+npm run test       # vitest，17 个用例
+npm run build      # 产物在 app/dist/
+npm run preview    # 预览构建产物
+npm run ci         # typecheck + test + build，CI 里跑的就是这条
 ```
 
-Windows 用户也可以直接双击 `tools/打开本地预览.cmd`（内置 PowerShell 静态服务，不依赖 Python，会顺带打开浏览器）。
+改完源码后把 `app/dist/index.html` 与 `app/dist/assets/` 覆盖到仓库根目录，线上页面即更新。
 
-首次加载需要联网：Three.js r160、MediaPipe tasks-vision 与手部模型走 CDN。没有摄像头也能玩——鼠标拖拽旋转、滚轮缩放、点击放烟花、按住左键直接用鼠标画。
+构建产物不依赖 importmap，可直接放进任意静态站点（GitHub Pages 也能用）。
 
-## 🧠 实现要点
-
-- **一个 Points 装下整棵树**：位置、颜色、尺寸、类型全部走 attribute，`mix(aTree, shape, uSpread)` 在做形变，避免多对象带来的 draw call。
-- **聚散是 shader 里的插值**：`uSpread` 从 0 到 1，粒子从树形飞到形态位置，同时叠加 `sin/cos` 漂移，散开时不呆板。
-- **进阶手势判据**：区分「捏合」与「握拳」不看拇指食指距离（握拳时指尖反而更近），而是三条一起判：`pinchD < 0.68`（指尖贴合）、拇指尖离开手腕 > 0.9 掌宽（排除了拇指缩在拳里的情况）、食指指尖离开手腕 > 1.05 掌宽（排除握拳）。
-- **五指为什么会被判成四指**：旧版只看「拇指尖是否比指间关节更远离手腕」，伸手到大屏前这个比值会掉到 1.2 以下；更要命的是「拇指侧向外撇」用的是图片 x 轴，左手 / 镜像画面直接失效。现在拇指判定改成三条正交判据：**IP 关节夹角**（`cos < -0.30`，即基本伸直）+ **拇指走向与掌轴夹角 > 30°** + **拇指尖离开掌心**，并把 MediaPipe 的 `worldLandmarks`（米制 3D 坐标）作为平行判据——手怎么转，角度和距离都不变，5 指和 6 指（沙卡）因此稳定分开。
-- **形态切换要「举住」**：手势必须先连续 4 帧判定一致，再保持 ~0.7 s 才换形态，且距上次换形态 1.5 s 内不再触发——手指从 1 伸到 5 的过渡帧不会连着切五次。
-- **调滑杆不重建场景**：亮度 / 对比度 / 大小 / 速度 / 照片大小 / 照片透明度只改 uniform 或 sprite 属性，粒子数量才重建 geometry；重建时把照片组、笔画组与它们的 uniform 引用迁移到新树，当前形态一并重算，画面不闪。
-- **树形是「分层 + 螺旋」算出来的**：`envAt(h)` 给出 7 层阶梯式半径包络（每层下沿微外张形成裙边），树冠沿层分布、外侧更密；另外 5 道金线用 `h × 2π × 5.2` 的螺旋绕在包络表面，每层下沿还有一圈亮边，所以转起来一眼能看出层次与缠绕感。
-- **照片抓取用屏幕空间命中**：把每张照片投影到 NDC 与指尖比距离（阈值 0.13），比三维距离稳得多；抓取期间锁住镜头缩放，松手用指数阻尼飞回球面轨道。
-- **笔迹是 3D 的**：落笔平面按「屏幕射线 × 当前视角前方某一深度」求交，再转进树的局部坐标——所以把手转到任何角度，笔还在你眼前这一层；深度由手掌远近微调、由抬笔自动递进（±0.85 往返），同一视角也能画出层层叠叠的隧道，转 90° 再画就是另一张"纸"，两张纸交叉便成了空间结构。
-- **粒子的体积感**：每个采样点扩成一簇（主点 + 1–2 个随机方向伴点），笔迹因此有厚度与散边，而不是一条扁平的点串。
-- **性能分档**：连续两次采样 fps < 42 才降一档（1.5 → 1.15 → 1.0，最低档关 bloom），避免瞬时抖动误降。
-
-## 📁 目录
+## 目录
 
 ```
-christmas-tree-gesture/
-├── index.html                # 全部内容（单文件，约 143 KB）
-├── README.md
-├── TESTING.md                # 测试报告：用例、手势回归数据、已知限制
-├── SKILL.md                  # 技能包说明：能力、参数、二次开发接口
-├── CONTRIBUTING.md           # 共建指南：怎么报 bug、怎么提 PR
-├── LICENSE                   # MIT
-├── demo.gif                  # 12 秒手势演示：比耶变形态 + 指尖画签名
-├── 01-tree.png ~ 05-panel.png  # 截图（含新版花环 + 双面板）
-├── tools/serve.ps1           # Windows 本地静态服务
-├── tools/打开本地预览.cmd
-└── .github/ISSUE_TEMPLATE/   # 报 Bug / 提需求 模板（空白 Issue 已关闭）
+app/index.html              # 只留 DOM / 样式，不再内联 3000 行脚本
+app/src/main.ts             # 启动：挂编辑器 → 挂鼠标手势 → 探测摄像头
+app/src/app/engine.ts       # 渲染内核（three.js 场景、粒子、着色器、手势 FSM、导出）
+app/src/webgpu/compute.ts   # WebGPU ping-pong 粒子物理（WGSL kernel）
+app/src/types/aurora.ts     # 引擎对外 API 的类型契约（window.__aurora）
+app/src/core/presets.ts     # 预设归一化 / 解析 / 序列化（纯函数，可单测）
+app/src/core/pointer.ts     # NDC 换算、力场强度步进（纯函数，可单测）
+app/src/core/backend.ts     # 渲染后端仲裁：auto / webgl / webgpu
+app/src/core/pointerHand.ts # 无摄像头时「鼠标当手」
+app/src/ui/editor.ts        # 完整场景编辑器（只通过 window.__aurora 改场景）
+app/src/ui/i18n.ts          # 中英文案字典 + 拼接句规则 + 语言探测
+app/src/ui/langDom.ts       # DOM 文本节点翻译、语言开关、动态内容兜底
+app/src/dev/errorScreen.ts  # 运行时报错落屏，加载卡住时不至于只看到星标
+.github/workflows/ci.yml    # push / PR 自动跑类型检查、单测、构建并上传 dist
 ```
 
-## 🤝 共建
+## 分层约定
 
-这个项目是**边玩边改出来的**，已知还有些没磨平的地方（见 [TESTING.md](TESTING.md) 第 5、7 节，尤其真实摄像头下的手感、不同机型的手势阈值）。欢迎直接提 Issue 或 PR：
+- **引擎**（`engine.ts`）独占 Three.js：场景、粒子属性、力场 uniform、手势状态机、照片星球、笔迹、录制。
+- **编辑器**（`editor.ts`）不碰 Three.js，只调用 `window.__aurora` 的语义 API：`setTheme` / `setShape` / `tune` / `setField` / `photos` / `layers` / `preset` / `snapshot` / `record`。
+- **输入**（`pointerHand.ts`）只写 `__aurora.pointer`（归一化坐标 + 捏合状态），世界坐标换算留给引擎的 `screenToWorld`。
 
-- 报 bug 请带上：浏览器版本、手势、你看到的画面（截图/录屏最好）、控制台报错；
-- 想改视觉/加形态，`shapePoint()` 里加一个分支就行，PR 里说明改了什么；
-- 不确定算不算 bug 也可以先开 Discussion 聊。
+## WebGPU 与 Ping-Pong compute
 
-详见 [CONTRIBUTING.md](CONTRIBUTING.md)。第一次参与开源也完全没问题，标 `good first issue` 的都是上手就能改的。
+渲染仍走 three.js WebGL，WebGPU 只负责粒子物理积分，避免把整棵树的材质重写成 TSL 节点。
 
-## 🧩 改造它
+- `src/webgpu/compute.ts` 里 `PingPongParticles` 持有 `base`（目标位置 + 种子，vec4）、`posA/posB`、`velA/velB` 三组 storage buffer，两个 bind group 互指，逐帧交替读写，就是 ping-pong。
+- WGSL kernel 每帧做：弹簧回位（形态切换后粒子自己落回去）、手掌排斥 / 吸引（按种子给不同 reach，吸引留球壳）、涡旋、脉冲冲击波、指数阻尼。
+- 算完 `copyBufferToBuffer` 到 staging，异步 `mapAsync` 读回，压成 vec3 喂给 `aPhys` 顶点属性；shader 里 `uGpu > 0.5` 时直接用 `aPhys` 当位置，同时关掉着色器内建的力场块。
+- 后端仲裁在 `src/core/backend.ts`：桌面 + 有 WebGPU 才 auto 启用；移动端、无 WebGPU、`?gpu=0` 都回落 WebGL2 着色器力场。编辑器「渲染后端」分组可手动切换，HUD 右下角实时显示当前后端。
+- 实测（Intel Gen-12lp 核显 / 26k 粒子）：WebGPU 约 45–47 fps，WebGL2 约 46 fps，切换后无明显掉帧。
 
-打开 `index.html`，所有可调参数集中在几处：`H=11 / R=4.6`（树高与半径）、`TREE_N`（初始粒子数，滑杆重建后会被改写）、`TUNE_DEFAULT`（滑杆默认值：数量 / 速度 / 亮度 / 对比度 / 大小 / 泛光 / 照片大小 / 照片透明度）、`SHAPE_ORDER`（形态顺序，同时也是键盘 1–6 与数字手势的映射）、`PHOTO_SLOTS` 与 `PHOTO_SPHERE`（照片球面分布：改 `PHOTO_MAX` 就自动重排 Fibonacci 球）、`INK_MAX`（画笔粒子上限）、`theme()`（配色主题）。形态生成函数是 `shapePoint(name, i, out, p)`，想要新造型就加一个分支，再把名字加进 `SHAPE_ORDER / SHAPE_LABEL / FINGER_SHAPE`；想改树的外观就动 `buildTree()` 里的 `TIERS` 与 `envAt()`。
+## 类型收紧的边界
 
-## 📌 兼容性
+- 全局 `strict: true`、`noImplicitAny`、`noUnusedLocals`，`tsc --noEmit` 通过。
+- `src/types/aurora.ts` 定义 `AuroraApi`（主题 / 形态 / 力场 / 调参 / 照片 / 层级 / 预设 / 导出 / 后端 / 统计），编辑器、鼠标输入、`main.ts` 全部按这个契约调，不再 `any`。
+- `engine.ts` 是 3.1k 行的迁移体，内部仍是 `// @ts-nocheck`——这是 knowingly 的临时边界：对外签名被 `AuroraApi` 卡死，对内等后续按模块拆（渲染 / 手势 / 照片 / 笔迹）再逐步补类型。README 里写明，不算“做完了”。
 
-Chrome / Edge / 较新的 Firefox、Safari 可用；手势需要 WebGL2 + 摄像头权限，识别全程在本地，不上传任何画面。
+## 测试与 CI
 
-## ⭐ 如果它让你停了一秒
+`src/core/*.test.ts` 共 17 个用例，覆盖三块最容易静默出错的纯逻辑：
 
-点个 Star 就是最好的支持；也欢迎 fork 出你自己的版本——换配色、换形态、换成新年主题都行。
+- `backend.test.ts`（4）：手动 / auto / 无 GPU / 移动端的仲裁结果与理由文案。
+- `pointer.test.ts`（7）：NDC 换算（中心、四角、越界夹取、尺寸为 0 不产生 Infinity）、力场强度步进与 0–2 夹取。
+- `presets.test.ts`（6）：预设归一化、坏 JSON / 数组输入返回 null、序列化往返。
 
-## License
+`.github/workflows/ci.yml`：push main、PR、手动触发；Node 22、`npm ci`、typecheck、test、build，最后把 `dist/` 作为 artifact 上传。
 
-MIT © 2026 Christmas Tree contributors
+## 编辑器能力
 
-其他去处：[Wiki](https://github.com/2766792840/christmas-tree-gesture/wiki)（玩法与已知问题的长文版）· [Discussions](https://github.com/2766792840/christmas-tree-gesture/discussions)（随便聊）· [在线体验](https://2766792840.github.io/christmas-tree-gesture/)
+| 分组 | 内容 |
+| --- | --- |
+| 输入源 | 鼠标 / 触屏 ↔ 摄像头手势，自动检测无摄像头并切鼠标模式 |
+| 渲染后端 | 自动 / WebGL 着色器 / WebGPU ping-pong + 运行状态 |
+| 主题 | 暖金圣诞 / 冰蓝雪夜 / 玫瑰微光 / 极光幻想 / 赛博全息 |
+| 形态 | 爱心 / 五角星 / 雪花 / 花环 / 星云 / MERRY（手势 1–6 指同源） |
+| 粒子 | 数量、流速、亮度、对比度、大小、辉光、照片尺寸、照片透明度 |
+| 力场 | 关 / 排斥 / 吸引 / 涡旋 + 强度 + 脉冲冲击波 + 演示动效 |
+| 照片 | 缩略图列表、单张隐藏/显示、删除、添加（多选） |
+| 层级 | 粒子树、树顶星、光晕、照片、星空、飘雪、极光、银河雾、地面、雪地、笔迹、烟花 |
+| 预设 | 保存本机、载入、导出 JSON、导入 JSON、粘贴 JSON 直接应用 |
+| 导出 | 存图 PNG、录制 8 秒 WebM |
 
+## 无摄像头的操作
+
+- 移动指针 = 手掌位置（力场中心）
+- 按住左键 = 握紧，力场强度 ×1.45
+- `Shift` + 滚轮 = 力场强度（没开力场时自动切到吸引）
+- `1`–`6` = 六种形态，`G` = 切力场，空格 = 脉冲冲击波，`E` = 开关编辑器
+
+## URL 参数
+
+`?field=1|2|3`（排斥/吸引/涡旋）、`?fieldSim=1`（力场自动巡演）、`?gpu=0`（强制 WebGL）、`?demo=1`（演示照片）、`?shape=heart|flake|...`、`?lang=en|zh`、`?debug=1`。
+
+## 与技术方案的对应
+
+已落地：三层语义（输入/感知 → 交互命令 → 渲染）、GPU 力场（排斥/吸引/涡旋/脉冲）、WebGPU ping-pong 粒子 compute、手势状态机 IDLE→CANDIDATE→ACTIVE→COOLDOWN 与优先级仲裁、多主题、场景预设、作品导出、工作室 HUD、类型契约、单测与 CI。
+
+尚未落地（明确标注，不假装做了）：
+- 以鼠标拖拽抓取照片星球（照片抓取仍依赖手部关键点）
+- 纯 WebGPU 渲染管线（当前是 compute + 回读 + WebGL 渲染，材质没迁到 TSL）
+- `engine.ts` 按模块拆分并补全内部类型（现在整体 `@ts-nocheck`）
+- E2E 视觉回归（现在只有纯逻辑单测）
+
+## GitHub Pages
+
+线上页面用的是仓库根目录（`main` / root）里的 `index.html` + `assets/`，不需要构建步骤，推上去就生效。
+
+如果 Pages 被改成了「GitHub Actions」模式，把根目录构建产物当作发布源即可；想改成 `/docs` 也可以，只需把 `index.html` 与 `assets/` 移进 `docs/`。
+
+旧版单文件页面留在 `legacy/v1/index.html`，需要时可单独打开，不影响线上。

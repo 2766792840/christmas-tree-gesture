@@ -10,3 +10,4 @@ desktop.ini
 *.ps1.bak
 *.tmp
 node_modules/
+app/dist/
