@@ -33,7 +33,7 @@
 ## 🎬 Eight seconds first
 
 <p align="center">
-  <img src="docs/screenshots/demo.gif?v=2" alt="Mouse circling drags the particle field, particles snap back afterwards" width="720">
+  <img src="docs/screenshots/demo-v22.gif" alt="Mouse circling drags the particle field, particles snap back afterwards" width="720">
 </p>
 
 <p align="center"><sub>One mouse circle: the force field drags particles away, and they spring back into the tree when you let go. Real recording, not a motion edit.</sub></p>
