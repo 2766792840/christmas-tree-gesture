@@ -44,7 +44,17 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 400);
-camera.position.set(0, 5.6, 27);
+
+// 竖屏（手机）时视野更窄，按比例把机位往后退，让整棵树完整入画
+function fitFactor() {
+  const aspect = innerWidth / innerHeight;
+  return aspect >= 1 ? 1 : Math.min(1.95, Math.pow(1 / aspect, 0.75));
+}
+let FIT = fitFactor();
+let BASE_D = 27 * FIT;
+let DIST_MIN = BASE_D * 0.68;
+let DIST_MAX = BASE_D * 1.72;
+camera.position.set(0, 5.6, BASE_D);
 
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
@@ -66,6 +76,13 @@ addEventListener('resize', () => {
   composer.setSize(innerWidth, innerHeight);
   bloomPass.setSize(innerWidth * 0.62, innerHeight * 0.62);
   syncPixel();
+  // 横竖屏切换后重新算基线机位，按比例把当前距离一起挪动
+  const next = fitFactor();
+  if (next !== FIT) {
+    const k = next / FIT;
+    FIT = next; BASE_D = 27 * FIT; DIST_MIN = BASE_D * 0.68; DIST_MAX = BASE_D * 1.72;
+    S.dist *= k; S.distT *= k;
+  }
 });
 
 /* ============================================================
@@ -1301,7 +1318,7 @@ function togglePhotoHidden(sp) {
 const S = {
   spread: 0, spreadT: 0,
   rot: 0, rotVel: 0,
-  dist: 27, distT: 27,
+  dist: BASE_D, distT: BASE_D,
   gallery: 0, galleryT: 0,
   dawn: 0,
   label: 'none', conf: 0,
@@ -1703,7 +1720,7 @@ function applyHands(info) {
   if (HANDS.hands.length >= 2) {
     const b = analyze(HANDS.hands[1], HANDS.aspect);
     const dd = Math.hypot((info.cx - b.cx) * HANDS.aspect, info.cy - b.cy);
-    S.distT = clamp(27 + (dd - 0.34) * 82, 17, 46);
+    S.distT = clamp(BASE_D + (dd - 0.34) * 82, DIST_MIN, DIST_MAX);
     S.spreadT = Math.max(S.spreadT, clamp((dd - 0.16) * 3.4, 0, 1));
   }
 
@@ -1738,7 +1755,7 @@ function applyHands(info) {
       if (PHOTOGRAB.sp) break;         // 正在抓照片时不缩放镜头
       // 平滑捏合距离，避免单帧抖动导致画面忽远忽近
       HANDS.pinchS = (HANDS.pinchS === undefined) ? info.pinchD : HANDS.pinchS * 0.78 + info.pinchD * 0.22;
-      S.distT = clamp(27 + (HANDS.pinchS - 0.42) * 75, 15, 44);
+      S.distT = clamp(BASE_D + (HANDS.pinchS - 0.42) * 75, DIST_MIN, DIST_MAX);
       break;
     }
     case 'ok': {
@@ -2404,7 +2421,7 @@ function setClean(on) {
   if (on) toast('净屏观赏中 · 右侧可退出', 2000);
 }
 function resetView() {
-  S.rot = 0; S.rotVel = 0; S.spreadT = 0; S.galleryT = 0; S.distT = 27;
+  S.rot = 0; S.rotVel = 0; S.spreadT = 0; S.galleryT = 0; S.distT = BASE_D;
 }
 
 function shareLink() {
@@ -2632,7 +2649,7 @@ canvas.addEventListener('pointermove', e => {
   } else if (pointers.size === 2) {
     const p = [...pointers.values()];
     const d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
-    if (pinchPrev > 0) S.distT = clamp(S.distT + (pinchPrev - d) * 0.055, 17, 46);
+    if (pinchPrev > 0) S.distT = clamp(S.distT + (pinchPrev - d) * 0.055, DIST_MIN, DIST_MAX);
     pinchPrev = d;
     dragMoved += Math.abs(dx) + Math.abs(dy);
   }
@@ -2668,7 +2685,7 @@ canvas.addEventListener('wheel', e => {
     setDepth(INK.depth - e.deltaY * 0.0035, true);
     return;
   }
-  S.distT = clamp(S.distT + e.deltaY * 0.02, 17, 46);
+  S.distT = clamp(S.distT + e.deltaY * 0.02, DIST_MIN, DIST_MAX);
 }, { passive: false });
 
 function hitPhoto(cx, cy) {
