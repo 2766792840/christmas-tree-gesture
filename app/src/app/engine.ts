@@ -10,6 +10,7 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { PingPongParticles } from '../webgpu/compute';
 import { resolveBackend } from '../core/backend';
 import { benchRecord, benchCount } from '../dev/bench';
+import { FboParticles } from '../webgl/fboParticles';
 
 const $ = (id) => document.getElementById(id);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -388,6 +389,10 @@ function buildTree(count) {
   // 上一帧回读快照：回读只有 ~11Hz，靠 aPhysPrev→aPhys 逐帧插值抹平阶梯感
   const aPhysPrev = new Float32Array(n * 3);
   geo.setAttribute('aPhysPrev', new THREE.BufferAttribute(aPhysPrev, 3).setUsage(THREE.DynamicDrawUsage));
+  // FBO GPGPU 路径：位置留在 GPU 纹理里，顶点着色器靠 aIdx 反查 texel
+  const aIdx = new Float32Array(n);
+  for (let i = 0; i < n; i++) aIdx[i] = i;
+  geo.setAttribute('aIdx', new THREE.BufferAttribute(aIdx, 1));
 
   const uni = { uSpread: { value: 0 }, uScale: { value: 1 }, uDawn: { value: 0 },
     uMorph: { value: 0 }, uPointer: { value: new THREE.Vector3(0, 4, 0) }, uPointerOn: { value: 0 },
@@ -395,16 +400,21 @@ function buildTree(count) {
     uHandPos: { value: new THREE.Vector3(0, 6, 0) }, uHandOn: { value: 0 },
     uHandMode: { value: 1 }, uHandPow: { value: 1 },
     uCurl: { value: 0 }, uPulseT: { value: -999 }, uPulseOrg: { value: new THREE.Vector3(0, 6, 0) },
-    uGpu: { value: 0 }, uPhysMix: { value: 1 } };
+    uGpu: { value: 0 }, uPhysMix: { value: 1 },
+    // GPU-resident（FBO）路径：uTex=1 时位置从纹理取，uGpu 与插值都不参与
+    uTex: { value: 0 }, uTexW: { value: 512 }, uTexH: { value: 1 }, uPosTex: { value: null } };
 
   const mat = new THREE.ShaderMaterial({
     uniforms: Object.assign({}, U, uni),
     vertexShader: `
       attribute vec3 aTree; attribute vec3 aShapeA; attribute vec3 aShapeB; attribute vec3 aColor; attribute vec3 aPhys;
       attribute vec3 aPhysPrev;
+      attribute float aIdx;
       attribute float aSize; attribute float aSeed; attribute float aKind;
       uniform float uTime, uSpread, uPixel, uScale, uDawn, uMorph, uPointerOn, uSizeK;
       uniform float uHandOn, uHandMode, uHandPow, uCurl, uPulseT, uGpu, uPhysMix;
+      uniform float uTex, uTexW, uTexH;
+      uniform sampler2D uPosTex;
       uniform vec3 uPointer, uHandPos, uPulseOrg;
       varying vec3 vColor; varying float vA; varying float vK; varying float vField;
       void main(){
@@ -413,7 +423,12 @@ function buildTree(count) {
         vec3 p = mix(aTree, shapeP, uSpread);
         // WebGPU ping-pong 已经算好绝对位置时，直接用它（力场 uniform 会在 CPU 侧被清零）
         // 回读速率低于渲染帧率，所以在这两帧快照之间做线性插值，避免 10Hz 的阶梯感
-        if (uGpu > 0.5) p = mix(aPhysPrev, aPhys, uPhysMix);
+        // GPU-resident：位置直接读 GPU 纹理，零回读、零插值
+        if (uTex > 0.5) {
+          vec2 cell = vec2(mod(aIdx, uTexW), floor(aIdx / uTexW));
+          vec2 uv = (cell + 0.5) / vec2(uTexW, uTexH);
+          p = texture2D(uPosTex, uv).xyz;
+        } else if (uGpu > 0.5) p = mix(aPhysPrev, aPhys, uPhysMix);
         // 指尖 / 鼠标牵引：靠近指端的粒子被推开，形成涟漪
         float pd = distance(p, uPointer);
         float pull = uPointerOn * (1.0 - smoothstep(0.0, 4.4, pd));
@@ -2976,8 +2991,9 @@ const V2HUD = { frames: 0, last: performance.now(), fps: 0, gpu: '' };
 
 /* ---- WebGPU ping-pong compute：可选后端，物理积分在 GPU 上跑 ---- */
 const GPU = {
-  mode: 'auto' as 'auto' | 'webgl' | 'webgpu',
+  mode: 'auto' as 'auto' | 'webgl' | 'webgpu' | 'fbo',
   compute: null as PingPongParticles | null,
+  fbo: null as FboParticles | null,
   active: false,
   ready: false,
   error: '',
@@ -3012,9 +3028,43 @@ function buildGpuBase(): Float32Array {
 function syncGpuHud() {
   const g = $('hudGpu');
   if (!g) return;
-  if (GPU.active) g.textContent = 'WebGPU · ping-pong';
+  if (GPU.active && GPU.fbo) g.textContent = 'FBO · GPU-resident';
+  else if (GPU.active) g.textContent = 'WebGPU · ping-pong';
   else if (GPU.error) g.textContent = 'WebGL2 · ' + GPU.error;
   else g.textContent = renderer.capabilities.isWebGL2 ? 'WebGL2' : 'WebGL1';
+}
+
+/** GPU-resident PoC：力场跑在 WebGL2 浮点纹理里，位置不上 CPU，渲染直接采样纹理 */
+function initFboCompute() {
+  if (GPU.fbo) { GPU.active = true; syncGpuHud(); return; }
+  GPU.mode = 'fbo';
+  GPU.ready = true;
+  if (!renderer.capabilities.isWebGL2) {
+    GPU.error = '无 WebGL2'; syncGpuHud(); return;
+  }
+  if (!FboParticles.supported(renderer)) {
+    GPU.error = '不支持浮点渲染目标（EXT_color_buffer_float）'; syncGpuHud(); return;
+  }
+  try {
+    const f = new FboParticles(renderer, tree.meta.kind.length);
+    const base = buildGpuBase();
+    f.reset(base as Float32Array);
+    GPU.fbo = f;
+    GPU.active = true;
+    GPU.error = '';
+    if (tree.uni) {
+      tree.uni.uTexW.value = f.texW;
+      tree.uni.uTexH.value = f.texH;
+      tree.uni.uPosTex.value = f.texture;
+    }
+    syncGpuHud();
+    toast('FBO GPGPU 已启用 · 粒子位置常驻显存，零回读', 2600);
+  } catch (e) {
+    GPU.error = 'FBO 初始化失败';
+    GPU.active = false;
+    console.warn('[fbo] init failed', e);
+    syncGpuHud();
+  }
 }
 
 async function initGpuCompute() {
@@ -3058,7 +3108,8 @@ async function initGpuCompute() {
 }
 
 function setGpuBackend(kind: string) {
-  GPU.mode = (kind === 'webgl' || kind === 'webgpu') ? kind : 'auto';
+  GPU.mode = (kind === 'webgl' || kind === 'webgpu' || kind === 'fbo') ? kind : 'auto';
+  if (GPU.mode === 'fbo') { initFboCompute(); return; }
   if (GPU.mode === 'webgl') {
     GPU.active = false;
     GPU.ready = true;
@@ -3082,7 +3133,9 @@ function tickHud() {
     if (ff) ff.textContent = '力场 ' + FIELD_NAME[FIELD.mode] + ' · 强度 ' + FIELD.power.toFixed(2);
     syncGpuHud();
   }
-  V2HUD.gpu = GPU.active ? 'WebGPU · ping-pong' : (renderer.capabilities.isWebGL2 ? 'WebGL2' : 'WebGL1');
+  V2HUD.gpu = GPU.active && GPU.fbo
+    ? 'FBO · GPU-resident'
+    : (GPU.active ? 'WebGPU · ping-pong' : (renderer.capabilities.isWebGL2 ? 'WebGL2' : 'WebGL1'));
 }
 
 /* 每帧更新力场：手掌位置 → uniform，力场开关做阻尼淡入淡出，CPU 只写 uniform 不回读粒子 */
@@ -3108,6 +3161,39 @@ function updateField(dt) {
     const p = screenToWorld(Math.sin(t * 0.7) * 0.5, Math.sin(t * 1.05 + 1) * 0.28 + 0.06);
     u.uHandPos.value.lerp(p, 0.3);
     effOn = 1;
+  }
+
+  /* FBO 路径：位置常驻 GPU 纹理，零回读 */
+  const fbo = GPU.fbo;
+  if (fbo && GPU.active) {
+    if (FIELD.pulse) { FIELD.pulse = false; u.uPulseOrg.value.copy(u.uHandPos.value); FIELD.pulseT = U.uTime.value; }
+    const powered = FIELD.power * (FIELD.mode === 3 ? 1.3 : 1) * (POINTER.on && POINTER.grabbing && !HANDS.running ? 1.45 : 1);
+    const baseStart = performance.now();
+    const base = buildGpuBase();
+    benchRecord('cpu.buildGpuBaseMs', performance.now() - baseStart);
+    const uploadStart = performance.now();
+    fbo.setBase(base as Float32Array);
+    benchRecord('cpu.setBaseCallMs', performance.now() - uploadStart);
+    const stepStart = performance.now();
+    fbo.step({
+      dt,
+      time: U.uTime.value,
+      hand: [u.uHandPos.value.x, u.uHandPos.value.y, u.uHandPos.value.z],
+      handOn: FIELD.mode === 0 ? 0 : effOn,
+      mode: FIELD.mode,
+      power: powered,
+      curl: FIELD.mode === 3 ? 1 : 0.22,
+      pulseT: FIELD.pulseT,
+      pulseOrg: [u.uPulseOrg.value.x, u.uPulseOrg.value.y, u.uPulseOrg.value.z]
+    });
+    benchRecord('gpu.fboStepMs', performance.now() - stepStart);
+    u.uPosTex.value = fbo.texture;
+    u.uTex.value = 1;
+    u.uGpu.value = 0;
+    u.uHandOn.value = 0;
+    u.uPulseT.value = -999;
+    tickHud();
+    return;
   }
 
   /* WebGPU 路径：位置积分交给 compute，shader 里的力场块全部失效 */
@@ -3156,12 +3242,14 @@ function updateField(dt) {
       ? Math.min(1, u.uPhysMix.value + dt / (GPU.readbackIntervalMs / 1000))
       : 1;
     u.uGpu.value = 1;
+    u.uTex.value = 0;
     u.uHandOn.value = 0;
     u.uPulseT.value = -999;
     tickHud();
     return;
   }
   u.uGpu.value = 0;
+  u.uTex.value = 0;
   u.uHandOn.value = damp(u.uHandOn.value, FIELD.mode === 0 ? 0 : effOn, 4.5, dt);
   u.uHandMode.value = FIELD.mode === 2 ? 2 : 1;
   u.uHandPow.value = FIELD.power * (FIELD.mode === 3 ? 1.3 : 1) * (POINTER.on && POINTER.grabbing && !HANDS.running ? 1.45 : 1);
@@ -3338,7 +3426,7 @@ const api = {
   // 鼠标当手
   pointer: POINTER,
   // 渲染后端（WebGPU ping-pong compute / WebGL）
-  backend: () => ({ mode: GPU.mode, active: GPU.active, ready: GPU.ready, error: GPU.error, readbackHz: GPU.readbackHz }),
+  backend: () => ({ mode: GPU.mode, active: GPU.active, ready: GPU.ready, error: GPU.error, readbackHz: GPU.readbackHz, gpuResident: !!GPU.fbo }),
   setBackend: setGpuBackend,
   // 照片
   photos: () => photos,
@@ -3375,7 +3463,9 @@ const api = {
   stats: () => ({
     fps: V2HUD.fps,
     count: tree.meta.kind.length,
-    gpu: GPU.active ? 'WebGPU · ping-pong' : (renderer.capabilities.isWebGL2 ? 'WebGL2' : 'WebGL1'),
+    gpu: GPU.active && GPU.fbo
+      ? 'FBO · GPU-resident'
+      : (GPU.active ? 'WebGPU · ping-pong' : (renderer.capabilities.isWebGL2 ? 'WebGL2' : 'WebGL1')),
     backend: GPU.mode,
     backendReady: GPU.ready,
     backendError: GPU.error
@@ -3401,9 +3491,10 @@ $('loadBar').style.width = '45%';
 (function boot() {
   const params = new URLSearchParams(location.search);
 
-  // 渲染后端：默认自动探测 WebGPU，?gpu=0 强制走 WebGL 着色器
-  if (params.get('gpu') === '0') setGpuBackend('webgl');
-  else if (GPU.mode !== 'webgl') setTimeout(() => { void initGpuCompute(); }, 900);
+  // 渲染后端：默认自动探测 WebGPU，?gpu=0 强制走 WebGL 着色器，?backend=fbo 走 FBO GPGPU
+  if (params.get('backend') === 'fbo') setGpuBackend('fbo');
+  else if (params.get('gpu') === '0') setGpuBackend('webgl');
+  else if (GPU.mode !== 'webgl' && GPU.mode !== 'fbo') setTimeout(() => { void initGpuCompute(); }, 900);
 
   // 套用上次保存的粒子参数（数量变了就重建一次）
   syncTuneUI();

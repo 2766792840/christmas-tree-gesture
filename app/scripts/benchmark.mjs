@@ -89,13 +89,14 @@ const runs = Number(arg('runs', '3'));
 const headless = hasFlag('headless');
 const channelArg = arg('channel', 'chrome');
 const requestedOutput = arg('output', '');
-if (!['auto', 'webgl'].includes(backend)) throw new Error('--backend must be auto or webgl');
+if (!['auto', 'webgl', 'fbo'].includes(backend)) throw new Error('--backend must be auto, webgl or fbo');
 if (!Number.isFinite(durationMs) || durationMs < 5000) throw new Error('--duration must be at least 5000 ms');
 if (!Number.isInteger(runs) || runs < 1 || runs > 20) throw new Error('--runs must be an integer from 1 to 20');
 
 const target = new URL(baseUrl);
-if (backend === 'webgl') target.searchParams.set('gpu', '0');
-else target.searchParams.delete('gpu');
+if (backend === 'webgl') { target.searchParams.set('gpu', '0'); target.searchParams.delete('backend'); }
+else if (backend === 'fbo') { target.searchParams.delete('gpu'); target.searchParams.set('backend', 'fbo'); }
+else { target.searchParams.delete('gpu'); target.searchParams.delete('backend'); }
 target.searchParams.set('fieldSim', '1');
 target.searchParams.set('debug', '1');
 target.searchParams.set('bench', '1');
