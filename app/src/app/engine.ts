@@ -2988,12 +2988,14 @@ function syncGpuHud() {
 
 async function initGpuCompute() {
   if (GPU.compute) return;
-  if (!('gpu' in navigator) || !navigator.gpu) { GPU.error = '浏览器无 WebGPU'; syncGpuHud(); return; }
+  // 注意：backendReady 表示「渲染后端可用」，WebGL 路径本身一直可用，
+  // 所以下面每个提前返回 / 失败分支都要把它置为 true，否则外部自检会误判卡死。
+  if (!('gpu' in navigator) || !navigator.gpu) { GPU.error = '浏览器无 WebGPU'; GPU.ready = true; syncGpuHud(); return; }
 
   let stage = 'create';
   try {
     const g = await PingPongParticles.create(tree.meta.kind.length);
-    if (!g) { GPU.error = 'WebGPU 设备不可用'; syncGpuHud(); return; }
+    if (!g) { GPU.error = 'WebGPU 设备不可用'; GPU.ready = true; syncGpuHud(); return; }
     stage = 'base';
     const base = buildGpuBase();
     stage = 'setBase';
@@ -3014,6 +3016,7 @@ async function initGpuCompute() {
     toast('WebGPU 已启用 · 粒子物理走 ping-pong compute', 2600);
   } catch (e: any) {
     GPU.error = 'WebGPU 初始化失败';
+    GPU.ready = true; // WebGL 渲染仍在跑，后端可用
     console.warn('[webgpu] init failed at', stage, e);
     syncGpuHud();
   }
@@ -3023,6 +3026,8 @@ function setGpuBackend(kind: string) {
   GPU.mode = (kind === 'webgl' || kind === 'webgpu') ? kind : 'auto';
   if (GPU.mode === 'webgl') {
     GPU.active = false;
+    GPU.ready = true;
+    GPU.error = '';
     syncGpuHud();
     return;
   }

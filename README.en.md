@@ -1,5 +1,10 @@
 # Aurora Tree Studio V2.2 · Gesture-driven Particle Christmas Tree
 
+[![CI](https://github.com/2766792840/christmas-tree-gesture/actions/workflows/ci.yml/badge.svg)](https://github.com/2766792840/christmas-tree-gesture/actions/workflows/ci.yml)
+[![Live demo](https://img.shields.io/badge/live-demo-ffd98a)](https://2766792840.github.io/christmas-tree-gesture/)
+[![Version](https://img.shields.io/badge/version-2.2.0-8fb0d4)](https://github.com/2766792840/christmas-tree-gesture/releases/tag/v2.2.0)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 [中文](README.md) | **English**
 
 A browser-based 3D particle Christmas tree studio: gesture- or mouse-driven particle force fields, photo memory orbs, 3D ink strokes, a full scene editor and artwork export. Built from the *Aurora Tree Studio V2 technical upgrade plan* — it is the version **migrated from a single-file demo to a Vite + TypeScript project skeleton**.
@@ -84,6 +89,22 @@ Rendering still goes through three.js WebGL; WebGPU only integrates particle phy
 - `presets.test.ts` (6): preset normalization, bad JSON / array input returning null, serialize round-trip.
 
 `.github/workflows/ci.yml`: on push to main, on PRs and on manual dispatch; Node 22, `npm ci`, typecheck, test, build, then uploads `dist/` as an artifact.
+
+### E2E and visual regression (Playwright)
+
+```bash
+cd app
+npx playwright install chromium   # once (CI uses --with-deps)
+npm run build && npm run e2e      # starts vite preview (8783), runs 6 tests
+```
+
+Pixel baselines differ per GPU (WebGPU / WebGL / SwiftShader all draw differently), so instead of a fake "locked baseline" this uses three machine-independent assertions:
+
+1. **Not a black screen** — luminance stddev and bright-pixel ratio after a screenshot;
+2. **State really changes** — switching shape must move more than 2% of pixels, catching a dead render loop behind a live UI;
+3. **No noise** — no `pageerror`, no console errors, no WebGPU `used in submit while mapped` warnings.
+
+Plus three functional checks: `?gpu=0` must fall back to WebGL2, language switching persists through `localStorage`, and when a WebGPU adapter exists the backend must be ping-pong (auto-skipped on GPU-less CI). Screenshots are attached to the report every run; CI uploads `playwright-report/` and `test-results/` on failure.
 
 ## Editor capabilities
 

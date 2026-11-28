@@ -10,6 +10,8 @@
     "preview": "vite preview --port 8783",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "e2e": "playwright test",
+    "e2e:install": "playwright install --with-deps chromium",
     "ci": "npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
@@ -17,7 +19,9 @@
     "three": "^0.187.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@webgpu/types": "^0.1.74",
+    "pngjs": "^7.0.0",
     "typescript": "^5.9.2",
     "vite": "^8.4.0",
     "vitest": "^3.2.7"

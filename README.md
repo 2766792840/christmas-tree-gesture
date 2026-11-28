@@ -1,5 +1,10 @@
 # Aurora Tree Studio V2.2 · 手势粒子圣诞树（工程版）
 
+[![CI](https://github.com/2766792840/christmas-tree-gesture/actions/workflows/ci.yml/badge.svg)](https://github.com/2766792840/christmas-tree-gesture/actions/workflows/ci.yml)
+[![Live demo](https://img.shields.io/badge/live-demo-ffd98a)](https://2766792840.github.io/christmas-tree-gesture/)
+[![Version](https://img.shields.io/badge/version-2.2.0-8fb0d4)](https://github.com/2766792840/christmas-tree-gesture/releases/tag/v2.2.0)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 **中文** | [English](README.en.md)
 
 浏览器端的 3D 粒子圣诞树工作台：手势 / 鼠标驱动粒子力场、照片记忆球、3D 笔迹、场景编辑器与作品导出。按《Aurora_Tree_Studio_V2 技术升级改造方案》落地，是**从单文件 demo 迁到 Vite + TypeScript 工程骨架**的版本。
@@ -84,6 +89,22 @@ app/src/dev/errorScreen.ts  # 运行时报错落屏，加载卡住时不至于�
 - `presets.test.ts`（6）：预设归一化、坏 JSON / 数组输入返回 null、序列化往返。
 
 `.github/workflows/ci.yml`：push main、PR、手动触发；Node 22、`npm ci`、typecheck、test、build，最后把 `dist/` 作为 artifact 上传。
+
+### E2E 与视觉回归（Playwright）
+
+```bash
+cd app
+npx playwright install chromium   # 只需一次（CI 里用 --with-deps）
+npm run build && npm run e2e      # 起 vite preview(8783) 后跑 6 个用例
+```
+
+像素基线在不同 GPU 上必然不同（WebGPU / WebGL / SwiftShader 各有各的画法），所以这里不做「锁死基线」的假回归，而是三条跨机器稳定的断言：
+
+1. **非黑屏**：截图后算亮度标准差与亮像素占比，阈值各自兜住「全黑 / 只有 UI」；
+2. **状态变化**：切形态前后两帧的像素差异比例必须 > 2%，防止「渲染循环停了但界面还在动」；
+3. **零噪音**：页面无 `pageerror`、无 console error、无 WebGPU `used in submit while mapped` 警告。
+
+另有三条功能回归：`?gpu=0` 必须回落 WebGL2、语言切换 + `localStorage` 持久化、WebGPU adapter 可用时后端必须是 ping-pong（CI 无 GPU 时自动 skip）。每次运行都把截图 attach 到报告里，CI 失败时上传 `playwright-report/` 与 `test-results/`。
 
 ## 编辑器能力
 

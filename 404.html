@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>404 · 这颗星尘没落在这里 / Lost in the stardust</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 5l5.4 21.6L53 32l-20.6 5.4L32 59l-5.4-21.6L5 32l21.6-5.4z' fill='%23ffd98a'/%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#02040a;color:#eaf3ff;font-family:"Noto Serif SC","Songti SC",Georgia,serif;overflow:hidden}
+body{display:grid;place-items:center;padding:24px}
+.vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(118% 86% at 50% 46%,rgba(0,0,0,0) 30%,rgba(1,5,14,.45) 72%,rgba(1,3,10,.9) 100%)}
+.stars{position:fixed;inset:0;pointer-events:none;opacity:.55;background-image:
+  radial-gradient(1px 1px at 12% 18%,#fff,transparent),
+  radial-gradient(1px 1px at 78% 12%,#cfe2ff,transparent),
+  radial-gradient(1px 1px at 33% 72%,#fff,transparent),
+  radial-gradient(1px 1px at 88% 63%,#9fe8ff,transparent),
+  radial-gradient(1px 1px at 56% 38%,#fff,transparent),
+  radial-gradient(1px 1px at 6% 84%,#ffd98a,transparent)}
+.card{position:relative;max-width:560px;text-align:center;padding:44px 30px}
+.star{font-size:34px;color:#ffd98a;filter:drop-shadow(0 0 18px rgba(255,200,110,.75))}
+h1{font-family:Cinzel,Georgia,serif;letter-spacing:.22em;font-size:13px;color:#8fb0d4;margin:18px 0 10px;text-transform:uppercase}
+.big{font-size:44px;letter-spacing:.06em;color:#ffd98a;margin-bottom:6px}
+p{color:#b9cbe4;line-height:1.9;font-size:14px}
+p.en{color:#8fb0d4;font-size:13px;margin-top:8px}
+.links{margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+a{display:inline-block;padding:10px 20px;border-radius:999px;border:1px solid rgba(255,217,138,.35);
+  color:#ffe9c4;text-decoration:none;font-size:13px;letter-spacing:.04em;transition:.25s}
+a:hover{background:rgba(255,217,138,.12);border-color:rgba(255,217,138,.7)}
+a.ghost{color:#9fc4ea;border-color:rgba(150,200,255,.28)}
+a.ghost:hover{background:rgba(150,200,255,.1)}
+hr{border:0;border-top:1px solid rgba(150,200,255,.16);margin:26px auto 0;max-width:220px}
+</style>
+</head>
+<body>
+<div class="stars"></div>
+<div class="vignette"></div>
+<main class="card">
+  <div class="star">✦</div>
+  <h1>Error 404</h1>
+  <div class="big">404</div>
+  <p>这颗星尘没有落在这里 —— 页面可能换了位置，或者从来没有存在过。</p>
+  <p class="en">This speck of stardust isn’t here. The page may have moved, or never existed.</p>
+  <hr>
+  <div class="links">
+    <a href="./">回到树前 · Back to the tree</a>
+    <a class="ghost" href="https://github.com/2766792840/christmas-tree-gesture">GitHub 仓库 · Repository</a>
+  </div>
+</main>
+</body>
+</html>
