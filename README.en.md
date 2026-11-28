@@ -41,7 +41,7 @@
 ## ✨ What you can play with
 
 - 🖐 **Gestures or mouse, your pick**: with a camera, raise a hand; without one, the mouse becomes your hand — move the pointer to steer the force-field center, hold the left button to "clench" and multiply field strength by 1.45.
-- 🪄 **26,000 particles**: not a texture — GPU point sprites, each with its own seed, colour, size and return spring.
+- 🪄 **26,000 particles**: not a texture — GPU point sprites, each with its own seed, colour, size and return spring. Phones drop to ~14k to keep the frame rate.
 - 💛 **Six shapes**: heart, star, snowflake, wreath, nebula, MERRY — hit `1`–`6` or raise 1–6 fingers and the particles fall into the new shape by themselves.
 - 🖼 **Photo memory orbs**: drop photos in and let them orbit the tree as planets; tweak size, opacity, per-photo visibility.
 - 🖌 **3D ink**: draw glowing strokes in space, and erase them.
