@@ -49,6 +49,12 @@ GPU：ANGLE (Intel, Intel(R) UHD Graphics, D3D11)。每组 3 轮 × 30 s，预�
 - `src/app/engine.ts`：`aPhysPrev` + `uPhysMix` 顶点插值，把 10.8–13 Hz 的快照在两帧之间线性推进；
   `?interp=0` 可退回逐帧直出做 A/B。
 
+## 线上复核（2026-11-28）
+
+部署后直接压线上地址（同样的 2×30 s、`?backend=fbo`）：p50 22.10 / p95 22.40 / p99 22.50，
+0 长任务、0 页面报错，HUD 上报 `FBO · GPU-resident`，`gpuResident: true`。
+说明本地结论与 Pages 产物一致，不是只在 dev 环境成立。
+
 ## 下一步（按证据排序）
 
 1. **GPU-resident 已跑通**（FBO，p99 22.5 ms）。下一步是设备矩阵验证 + 决定是否把它设为桌面默认，
