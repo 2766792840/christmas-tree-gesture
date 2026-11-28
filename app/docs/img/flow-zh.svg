@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="600" viewBox="0 0 1440 600" role="img" aria-label="渲染链路 / 一帧的生命周期">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a1120"/>
+      <stop offset="1" stop-color="#070b14"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.2" cy="0.1" r="0.8">
+      <stop offset="0" stop-color="#1f3a6b" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#1f3a6b" stop-opacity="0"/>
+    </radialGradient>
+    <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3d4d6b"/>
+    </marker>
+    
+    <linearGradient id="g-input" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#12304f"/>
+      <stop offset="1" stop-color="#0c1c2e"/>
+    </linearGradient>
+    <linearGradient id="g-norm" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#241a45"/>
+      <stop offset="1" stop-color="#141026"/>
+    </linearGradient>
+    <linearGradient id="g-arb" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3a2a10"/>
+      <stop offset="1" stop-color="#211806"/>
+    </linearGradient>
+    <linearGradient id="g-gpuA" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f3227"/>
+      <stop offset="1" stop-color="#091b15"/>
+    </linearGradient>
+    <linearGradient id="g-gpuB" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d2c33"/>
+      <stop offset="1" stop-color="#081a1f"/>
+    </linearGradient>
+    <linearGradient id="g-pos" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#33122a"/>
+      <stop offset="1" stop-color="#1e0918"/>
+    </linearGradient>
+    <linearGradient id="g-render" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#152744"/>
+      <stop offset="1" stop-color="#0c1626"/>
+    </linearGradient>
+    <linearGradient id="g-out" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3a2410"/>
+      <stop offset="1" stop-color="#22150a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="600" fill="url(#bg)"/>
+  <rect width="1440" height="600" fill="url(#glow)"/>
+  <rect x="1" y="1" width="1438" height="598" rx="18" fill="none" stroke="#1c2942" stroke-width="2"/>
+
+  <text x="40" y="52" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="12" letter-spacing="2.4" fill="#5b6a86">渲染链路 / 一帧的生命周期</text>
+  <text x="1400" y="52" text-anchor="end" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="12" fill="#5b6a86">实测 p99 22.5ms（FBO 路径）</text>
+
+  
+  <g>
+    <rect x="40" y="96" width="300" height="112" rx="14" fill="url(#g-input)" stroke="#58a6ff" stroke-opacity="0.55" stroke-width="1.2"/>
+    <rect x="40" y="96" width="300" height="112" rx="14" fill="none" stroke="#58a6ff" stroke-opacity="0.16" stroke-width="6"/>
+    <text x="60" y="134" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="17" font-weight="600" fill="#a7d3ff">输入</text>
+    <text x="60" y="162" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="12.5" fill="#8b9ab3">手势 · 鼠标 · 触屏</text>
+  </g>
+  
+  <g>
+    <rect x="400" y="96" width="300" height="112" rx="14" fill="url(#g-norm)" stroke="#a371f7" stroke-opacity="0.55" stroke-width="1.2"/>
+    <rect x="400" y="96" width="300" height="112" rx="14" fill="none" stroke="#a371f7" stroke-opacity="0.16" stroke-width="6"/>
+    <text x="420" y="134" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="17" font-weight="600" fill="#cfb6ff">归一化</text>
+    <text x="420" y="162" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="12.5" fill="#8b9ab3">NDC 坐标 + 捏合量</text>
+  </g>
+  
+  <g>
+    <rect x="760" y="96" width="340" height="112" rx="14" fill="url(#g-arb)" stroke="#f2cc60" stroke-opacity="0.55" stroke-width="1.2"/>
+    <rect x="760" y="96" width="340" height="112" rx="14" fill="none" stroke="#f2cc60" stroke-opacity="0.16" stroke-width="6"/>
+    <text x="780" y="134" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="17" font-weight="600" fill="#ffe08a">交互仲裁</text>
+    <text x="780" y="162" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="12.5" fill="#8b9ab3">双手缩放 &gt; 照片抓取 &gt; 画笔 &gt; 旋转 &gt; 形态</text>
+  </g>
+  
+  <g>
+    <rect x="40" y="312" width="300" height="112" rx="14" fill="url(#g-gpuA)" stroke="#3fb950" stroke-opacity="0.55" stroke-width="1.2"/>
+    <rect x="40" y="312" width="300" height="112" rx="14" fill="none" stroke="#3fb950" stroke-opacity="0.16" stroke-width="6"/>
+    <text x="60" y="350" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="17" font-weight="600" fill="#8ee6a8">WebGPU compute</text>
+    <text x="60" y="378" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="12.5" fill="#8b9ab3">WGSL ping-pong · 双缓冲</text>
+  </g>
+  
+  <g>
+    <rect x="400" y="312" width="300" height="112" rx="14" fill="url(#g-gpuB)" stroke="#39c5cf" stroke-opacity="0.55" stroke-width="1.2"/>
+    <rect x="400" y="312" width="300" height="112" rx="14" fill="none" stroke="#39c5cf" stroke-opacity="0.16" stroke-width="6"/>
+    <text x="420" y="350" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="17" font-weight="600" fill="#8fe4ea">WebGL2 FBO GPGPU</text>
+    <text x="420" y="378" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="12.5" fill="#8b9ab3">RGBA32F 位置 / 速度纹理</text>
+  </g>
+  
+  <g>
+    <rect x="760" y="312" width="300" height="112" rx="14" fill="url(#g-pos)" stroke="#ea4aaa" stroke-opacity="0.55" stroke-width="1.2"/>
+    <rect x="760" y="312" width="300" height="112" rx="14" fill="none" stroke="#ea4aaa" stroke-opacity="0.16" stroke-width="6"/>
+    <text x="780" y="350" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="17" font-weight="600" fill="#ff9ed4">粒子位置</text>
+    <text x="780" y="378" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="12.5" fill="#8b9ab3">26,000 颗 · 顶点插值回读</text>
+  </g>
+  
+  <g>
+    <rect x="1112" y="312" width="288" height="112" rx="14" fill="url(#g-render)" stroke="#79c0ff" stroke-opacity="0.55" stroke-width="1.2"/>
+    <rect x="1112" y="312" width="288" height="112" rx="14" fill="none" stroke="#79c0ff" stroke-opacity="0.16" stroke-width="6"/>
+    <text x="1132" y="350" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="17" font-weight="600" fill="#a9d6ff">three.js</text>
+    <text x="1132" y="378" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="12.5" fill="#8b9ab3">渲染 · Bloom · 星空 · 飘雪</text>
+  </g>
+  
+  <g>
+    <rect x="760" y="480" width="300" height="78" rx="14" fill="url(#g-out)" stroke="#ff9f45" stroke-opacity="0.55" stroke-width="1.2"/>
+    <rect x="760" y="480" width="300" height="78" rx="14" fill="none" stroke="#ff9f45" stroke-opacity="0.16" stroke-width="6"/>
+    <text x="780" y="518" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="17" font-weight="600" fill="#ffc58f">导出</text>
+    <text x="780" y="546" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-size="12.5" fill="#8b9ab3">PNG 存图 · WebM 录制</text>
+  </g>
+
+  <path d="M 340 152 L 396 152" fill="none" stroke="#3d4d6b" stroke-width="1.6" marker-end="url(#arrowhead)"/>
+  <path d="M 700 152 L 756 152" fill="none" stroke="#3d4d6b" stroke-width="1.6" marker-end="url(#arrowhead)"/>
+  <path d="M 882 208 L 882 208 L 882 250 L 880 250" fill="none" stroke="#3d4d6b" stroke-width="1.6" marker-end="url(#arrowhead)"/>
+  <path d="M 882 250 L 190 250 L 190 310" fill="none" stroke="#3d4d6b" stroke-width="1.6" marker-end="url(#arrowhead)"/>
+  <path d="M 882 250 L 550 250 L 550 310" fill="none" stroke="#3d4d6b" stroke-width="1.6" marker-end="url(#arrowhead)"/>
+  <path d="M 340 368 L 396 368" fill="none" stroke="#3d4d6b" stroke-width="1.6" marker-end="url(#arrowhead)"/>
+  <path d="M 700 368 L 756 368" fill="none" stroke="#3d4d6b" stroke-width="1.6" marker-end="url(#arrowhead)"/>
+  <path d="M 1060 368 L 1116 368" fill="none" stroke="#3d4d6b" stroke-width="1.6" marker-end="url(#arrowhead)"/>
+  <path d="M 1260 424 L 1260 452 L 912 452 L 912 478" fill="none" stroke="#3d4d6b" stroke-width="1.6" marker-end="url(#arrowhead)"/>
+</svg>

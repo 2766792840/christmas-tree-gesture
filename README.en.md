@@ -12,6 +12,8 @@ Photo orbs · 3D particle brush · scene editor · PNG / WebM export · bilingua
 [Benchmarks](app/docs/BENCHMARK.md) ·
 [Gesture pipeline](app/docs/GESTURE.md)
 
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=20&pause=1400&color=F2CC60&center=true&vCenter=true&width=760&lines=26%2C000+particles+%E2%9C%A8+WebGPU+compute+%2B+WebGL2+FBO;Hand+gesture+%E2%86%92+One+Euro+filter+%E2%86%92+hysteresis+FSM;PNG+%2F+WebM+export+%E2%8F%AC+6+morphing+shapes+%E2%8F%AC+photo+orbs" alt="Aurora Tree Studio typing tagline" width="760">
+
 <!-- Row 1: status and headline numbers -->
 [![CI](https://img.shields.io/github/actions/workflow/status/2766792840/christmas-tree-gesture/ci.yml?branch=main&label=CI&logo=githubactions&logoColor=white&style=for-the-badge&color=2ea043)](https://github.com/2766792840/christmas-tree-gesture/actions)
 [![Pages](https://img.shields.io/github/deployments/2766792840/christmas-tree-gesture/github-pages?label=Pages&logo=github&logoColor=white&style=for-the-badge&color=8957e5)](https://2766792840.github.io/christmas-tree-gesture/)
@@ -30,6 +32,16 @@ Photo orbs · 3D particle brush · scene editor · PNG / WebM export · bilingua
 [![Unit](https://img.shields.io/badge/unit%20tests-25%20passed-3fb950?style=for-the-badge&logo=vitest&logoColor=white)](#-quality)
 [![E2E](https://img.shields.io/badge/E2E-6%20passed-2ead33?style=for-the-badge&logo=playwright&logoColor=white)](#-quality)
 [![i18n](https://img.shields.io/badge/i18n-EN%20%7C%20%E4%B8%AD%E6%96%87-ea4aaa?style=for-the-badge)](#bilingual-ui)
+
+<!-- Row 4: live repo signals (all generated from GitHub data, not hand-written numbers) -->
+[![Last commit](https://img.shields.io/github/last-commit/2766792840/christmas-tree-gesture?style=for-the-badge&label=last%20commit&logo=git&logoColor=white&color=ff8f2e)](https://github.com/2766792840/christmas-tree-gesture/commits/main)
+[![Stars](https://img.shields.io/github/stars/2766792840/christmas-tree-gesture?style=for-the-badge&label=stars&logo=github&logoColor=white&color=ffd166)](https://github.com/2766792840/christmas-tree-gesture/stargazers)
+[![Forks](https://img.shields.io/github/forks/2766792840/christmas-tree-gesture?style=for-the-badge&label=forks&logo=github&logoColor=white&color=58a6ff)](https://github.com/2766792840/christmas-tree-gesture/forks)
+[![Contributors](https://img.shields.io/github/contributors/2766792840/christmas-tree-gesture?style=for-the-badge&label=contributors&color=3fb950)](https://github.com/2766792840/christmas-tree-gesture/graphs/contributors)
+[![Issues](https://img.shields.io/github/issues/2766792840/christmas-tree-gesture?style=for-the-badge&label=issues&logo=github&logoColor=white&color=ea4aaa)](https://github.com/2766792840/christmas-tree-gesture/issues)
+[![PRs](https://img.shields.io/badge/PRs-welcome-ff5c8a?style=for-the-badge&logo=git&logoColor=white)](https://github.com/2766792840/christmas-tree-gesture/pulls)
+[![Repo size](https://img.shields.io/github/repo-size/2766792840/christmas-tree-gesture?style=for-the-badge&label=repo%20size&color=8957e5)](https://github.com/2766792840/christmas-tree-gesture)
+[![Code size](https://img.shields.io/github/languages/code-size/2766792840/christmas-tree-gesture?style=for-the-badge&label=code%20size&color=00b3a4)](https://github.com/2766792840/christmas-tree-gesture)
 
 <a href="https://2766792840.github.io/christmas-tree-gesture/">
   <img src="app/docs/img/hero.jpg" alt="Aurora Tree Studio: particle Christmas tree in clean mode" width="100%">
@@ -139,24 +151,11 @@ Just show your hand to the camera — or skip the camera entirely and use mouse 
 
 ## 🧩 Stack
 
-```mermaid
-flowchart LR
-  A["🖐 gesture / 🖱 mouse / 📱 touch"] --> B["input normalisation<br/>NDC + pinch"]
-  B --> C{"arbitration<br/>two-hand zoom > photo grab > brush > rotate > shape"}
-  C --> D["WebGPU compute<br/>WGSL ping-pong"]
-  C --> E["WebGL2 FBO GPGPU<br/>RGBA32F position/velocity"]
-  D --> F["particle positions"]
-  E --> F
-  F --> G["three.js render<br/>bloom + stars + snow"]
-  G --> H["PNG / WebM export"]
-
-  classDef input fill:#1f6feb22,stroke:#58a6ff,color:#c9d4e5
-  classDef core fill:#23863622,stroke:#3fb950,color:#c9d4e5
-  classDef gpu fill:#8957e522,stroke:#a371f7,color:#c9d4e5
-  class A,B input
-  class C core
-  class D,E,F,G,H gpu
-```
+<div align="center">
+  <img src="app/docs/img/flow-en.svg" alt="Frame pipeline: input → normalize → interaction arbiter → WebGPU compute / WebGL2 FBO → particle positions → three.js render → export" width="100%">
+  <br>
+  <sub>One frame's life: two GPU paths, particles stay in VRAM, three.js hands the result to bloom and stars</sub>
+</div>
 
 | Layer | Location | Responsibility |
 | --- | --- | --- |
