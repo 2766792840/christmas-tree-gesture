@@ -1,0 +1,2 @@
+run_group,commit_sha,package_lock_hash,device_model,os,cpu,gpu,browser,browser_version,power_state,backend,readback_hz,particles,canvas_width,canvas_height,dpr,theme,postprocessing,camera_state,duration_s,frame_p50_ms,frame_p95_ms,frame_p99_ms,mean_fps,long_task_count,readback_queue_wait_p95_ms,map_wait_p95_ms,readback_copy_p95_ms,heap_start_bytes,heap_end_bytes,device_loss_count,console_error_count,notes
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,

@@ -5,3 +5,7 @@ playwright-report/
 playwright/.cache/
 .DS_Store
 *.log
+
+# 基准原始逐轮记录不入库，只保留合并后的 benchmark.json
+benchmark-results/*-run*.json
+benchmark-results/_*

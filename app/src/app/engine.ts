@@ -9,6 +9,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { PingPongParticles } from '../webgpu/compute';
 import { resolveBackend } from '../core/backend';
+import { benchRecord, benchCount } from '../dev/bench';
 
 const $ = (id) => document.getElementById(id);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -384,6 +385,9 @@ function buildTree(count) {
   // WebGPU ping-pong compute 写回的绝对位置（未启用时全 0，靠 uGpu=0 走原有着色器路径）
   const aPhys = new Float32Array(n * 3);
   geo.setAttribute('aPhys', new THREE.BufferAttribute(aPhys, 3).setUsage(THREE.DynamicDrawUsage));
+  // 上一帧回读快照：回读只有 ~11Hz，靠 aPhysPrev→aPhys 逐帧插值抹平阶梯感
+  const aPhysPrev = new Float32Array(n * 3);
+  geo.setAttribute('aPhysPrev', new THREE.BufferAttribute(aPhysPrev, 3).setUsage(THREE.DynamicDrawUsage));
 
   const uni = { uSpread: { value: 0 }, uScale: { value: 1 }, uDawn: { value: 0 },
     uMorph: { value: 0 }, uPointer: { value: new THREE.Vector3(0, 4, 0) }, uPointerOn: { value: 0 },
@@ -391,15 +395,16 @@ function buildTree(count) {
     uHandPos: { value: new THREE.Vector3(0, 6, 0) }, uHandOn: { value: 0 },
     uHandMode: { value: 1 }, uHandPow: { value: 1 },
     uCurl: { value: 0 }, uPulseT: { value: -999 }, uPulseOrg: { value: new THREE.Vector3(0, 6, 0) },
-    uGpu: { value: 0 } };
+    uGpu: { value: 0 }, uPhysMix: { value: 1 } };
 
   const mat = new THREE.ShaderMaterial({
     uniforms: Object.assign({}, U, uni),
     vertexShader: `
       attribute vec3 aTree; attribute vec3 aShapeA; attribute vec3 aShapeB; attribute vec3 aColor; attribute vec3 aPhys;
+      attribute vec3 aPhysPrev;
       attribute float aSize; attribute float aSeed; attribute float aKind;
       uniform float uTime, uSpread, uPixel, uScale, uDawn, uMorph, uPointerOn, uSizeK;
-      uniform float uHandOn, uHandMode, uHandPow, uCurl, uPulseT, uGpu;
+      uniform float uHandOn, uHandMode, uHandPow, uCurl, uPulseT, uGpu, uPhysMix;
       uniform vec3 uPointer, uHandPos, uPulseOrg;
       varying vec3 vColor; varying float vA; varying float vK; varying float vField;
       void main(){
@@ -407,7 +412,8 @@ function buildTree(count) {
         vec3 shapeP = mix(aShapeA, aShapeB, uMorph);
         vec3 p = mix(aTree, shapeP, uSpread);
         // WebGPU ping-pong 已经算好绝对位置时，直接用它（力场 uniform 会在 CPU 侧被清零）
-        if (uGpu > 0.5) p = aPhys;
+        // 回读速率低于渲染帧率，所以在这两帧快照之间做线性插值，避免 10Hz 的阶梯感
+        if (uGpu > 0.5) p = mix(aPhysPrev, aPhys, uPhysMix);
         // 指尖 / 鼠标牵引：靠近指端的粒子被推开，形成涟漪
         float pd = distance(p, uPointer);
         float pull = uPointerOn * (1.0 - smoothstep(0.0, 4.4, pd));
@@ -2975,6 +2981,13 @@ const GPU = {
   active: false,
   ready: false,
   error: '',
+  readbackHz: 0,
+  /** 最近一次实测的回读间隔（ms），插值系数按它推进 */
+  readbackIntervalMs: 90,
+  lastReadbackAt: 0,
+  /** 回读插值开关：?interp=0 可退回逐帧直出，用于真机 A/B */
+  interp: true,
+  tmp: null as Float32Array | null,
   base: null as Float32Array | null
 };
 
@@ -3010,9 +3023,13 @@ async function initGpuCompute() {
   // 所以下面每个提前返回 / 失败分支都要把它置为 true，否则外部自检会误判卡死。
   if (!('gpu' in navigator) || !navigator.gpu) { GPU.error = '浏览器无 WebGPU'; GPU.ready = true; syncGpuHud(); return; }
 
+  const readbackHz = Number(new URLSearchParams(location.search).get('readbackHz')) || 0;
+  GPU.readbackHz = readbackHz;
+  GPU.interp = new URLSearchParams(location.search).get('interp') !== '0';
+
   let stage = 'create';
   try {
-    const g = await PingPongParticles.create(tree.meta.kind.length);
+    const g = await PingPongParticles.create(tree.meta.kind.length, { readbackHz });
     if (!g) { GPU.error = 'WebGPU 设备不可用'; GPU.ready = true; syncGpuHud(); return; }
     stage = 'base';
     const base = buildGpuBase();
@@ -3098,7 +3115,12 @@ function updateField(dt) {
   if (gpu && GPU.active) {
     if (FIELD.pulse) { FIELD.pulse = false; u.uPulseOrg.value.copy(u.uHandPos.value); FIELD.pulseT = U.uTime.value; }
     const powered = FIELD.power * (FIELD.mode === 3 ? 1.3 : 1) * (POINTER.on && POINTER.grabbing && !HANDS.running ? 1.45 : 1);
-    gpu.setBase(buildGpuBase());
+    const baseStart = performance.now();
+    const base = buildGpuBase();
+    benchRecord('cpu.buildGpuBaseMs', performance.now() - baseStart);
+    const uploadStart = performance.now();
+    gpu.setBase(base as Float32Array<ArrayBuffer>);
+    benchRecord('cpu.setBaseCallMs', performance.now() - uploadStart);
     gpu.step({
       dt,
       time: U.uTime.value,
@@ -3111,7 +3133,28 @@ function updateField(dt) {
       pulseOrg: [u.uPulseOrg.value.x, u.uPulseOrg.value.y, u.uPulseOrg.value.z]
     });
     const attr = tree.geo.attributes.aPhys;
-    if (gpu.readInto(attr.array as Float32Array)) attr.needsUpdate = true;
+    const prevAttr = tree.geo.attributes.aPhysPrev;
+    const cur = attr.array as Float32Array;
+    const prev = prevAttr.array as Float32Array;
+    const tmp = (GPU.tmp ??= new Float32Array(cur.length));
+    // 回读到临时数组，拿到新样本才滚动：prev ← cur，cur ← 新样本，插值系数归零
+    if (gpu.readInto(tmp)) {
+      prev.set(cur);
+      cur.set(tmp);
+      attr.needsUpdate = true;
+      prevAttr.needsUpdate = true;
+      const nowR = performance.now();
+      if (GPU.lastReadbackAt > 0) {
+        GPU.readbackIntervalMs = Math.min(400, Math.max(16, nowR - GPU.lastReadbackAt));
+      }
+      GPU.lastReadbackAt = nowR;
+      u.uPhysMix.value = 0;
+      benchCount('gpu.interpSnapshots');
+    }
+    // 两帧快照之间逐帧推进，渲染端平滑过渡（回读 ~11Hz，渲染 ~45fps）
+    u.uPhysMix.value = GPU.interp
+      ? Math.min(1, u.uPhysMix.value + dt / (GPU.readbackIntervalMs / 1000))
+      : 1;
     u.uGpu.value = 1;
     u.uHandOn.value = 0;
     u.uPulseT.value = -999;
@@ -3295,7 +3338,7 @@ const api = {
   // 鼠标当手
   pointer: POINTER,
   // 渲染后端（WebGPU ping-pong compute / WebGL）
-  backend: () => ({ mode: GPU.mode, active: GPU.active, ready: GPU.ready, error: GPU.error }),
+  backend: () => ({ mode: GPU.mode, active: GPU.active, ready: GPU.ready, error: GPU.error, readbackHz: GPU.readbackHz }),
   setBackend: setGpuBackend,
   // 照片
   photos: () => photos,

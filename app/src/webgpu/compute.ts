@@ -9,6 +9,8 @@
  * 又不用把整棵树的材质重写成 TSL 节点。
  */
 
+import { benchRecord, benchCount } from '../dev/bench';
+
 export interface FieldStep {
   dt: number;
   time: number;
@@ -21,8 +23,12 @@ export interface FieldStep {
   pulseOrg: [number, number, number];
 }
 
-const WGSL = /* wgsl */ `
-struct U {
+export interface ComputeOptions {
+  /** 回读限频：只节流 copyBufferToBuffer + map/readInto，compute 仍逐帧派发。0/undefined = 每帧回读 */
+  readbackHz?: number;
+}
+
+const WGSL = /* wgsl */ `struct U {
   dt: f32,
   time: f32,
   count: f32,
@@ -120,20 +126,26 @@ export class PingPongParticles {
   private flip = 0;
   private disposed = false;
   private queue: GPUQueue;
+  /** 回读限频（ms）：0 表示每帧都回读 */
+  private readbackMinIntervalMs: number;
+  private lastQueuedAt = 0;
+  private lastReadbackAt = 0;
 
-  static async create(count: number): Promise<PingPongParticles | null> {
+  static async create(count: number, opts: ComputeOptions = {}): Promise<PingPongParticles | null> {
     if (!('gpu' in navigator) || !navigator.gpu) return null;
     try {
       const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
       if (!adapter) return null;
       const device = await adapter.requestDevice();
-      return new PingPongParticles(device, count);
+      return new PingPongParticles(device, count, opts);
     } catch {
       return null;
     }
   }
 
-  private constructor(device: GPUDevice, count: number) {
+  private constructor(device: GPUDevice, count: number, opts: ComputeOptions = {}) {
+    const hz = Number(opts.readbackHz);
+    this.readbackMinIntervalMs = Number.isFinite(hz) && hz > 0 ? 1000 / hz : 0;
     this.device = device;
     this.count = count;
     this.queue = device.queue;
@@ -209,6 +221,7 @@ export class PingPongParticles {
 
   step(f: FieldStep): void {
     if (this.disposed) return;
+    const submitStart = performance.now();
     const u = new Float32Array(24);
     u[0] = f.dt; u[1] = f.time; u[2] = this.count; u[3] = f.mode;
     u[4] = f.power; u[5] = f.curl; u[6] = f.handOn; u[7] = f.pulseT;
@@ -219,9 +232,14 @@ export class PingPongParticles {
     const srcIdx = this.flip;
     const bind = srcIdx === 0 ? this.bindA : this.bindB;
     const dst = this.frames[1 - srcIdx];
-    // staging 还在 map 状态时不能往里拷：WebGPU 会报 "used in submit while mapped"，
-    // 且数据会覆盖掉正在读的那一帧。这一帧跳过回读，下一帧再补。
-    const canCopy = !dst.mapped && !dst.ready;
+    const now = performance.now();
+    const gateOpen = this.readbackMinIntervalMs <= 0 || this.lastQueuedAt === 0
+      || now - this.lastQueuedAt >= this.readbackMinIntervalMs;
+    // staging 仍在 map 状态时不能再往里拷（WebGPU 会报 used in submit while mapped）。
+    // 实测：把 staging 环扩到 8 槽、每帧都 copy+map，能把回读速率拉到 ~45Hz，
+    // 但 Intel 核显上 p95/p99 从 22.5/44.4 恶化到 44/44，还会偶发数秒驱动卡死；
+    // 因此默认保留「串行、低速率」的稳定通路，靠渲染侧插值补平滑（见 engine.ts aPhysPrev）。
+    const canCopy = gateOpen && !dst.mapped && !dst.ready;
 
     const enc = this.device.createCommandEncoder();
     const pass = enc.beginComputePass();
@@ -229,8 +247,15 @@ export class PingPongParticles {
     pass.setBindGroup(0, bind);
     pass.dispatchWorkgroups(Math.ceil(this.count / 64));
     pass.end();
-    if (canCopy) enc.copyBufferToBuffer(dst.pos, 0, dst.staging, 0, this.count * 16);
+    if (canCopy) {
+      enc.copyBufferToBuffer(dst.pos, 0, dst.staging, 0, this.count * 16);
+      this.lastQueuedAt = now;
+      benchCount('gpu.readbackQueued');
+    } else {
+      benchCount('gpu.readbackSkipped');
+    }
     this.queue.submit([enc.finish()]);
+    benchRecord('gpu.submitCpuMs', performance.now() - submitStart);
 
     this.flip = 1 - this.flip;
     if (canCopy) this.requestReadback(dst);
@@ -239,10 +264,17 @@ export class PingPongParticles {
   private requestReadback(frame: FrameBuffers): void {
     if (frame.mapped) return;
     frame.mapped = true;
+    const queueWaitStart = performance.now();
     // 等这次 submit 真正跑完再 map，避免映射仍在用的 buffer
     this.queue.onSubmittedWorkDone()
-      .then(() => frame.staging.mapAsync(GPUMapMode.READ))
-      .then(() => { frame.ready = true; })
+      .then(() => {
+        benchRecord('gpu.queueWaitMs', performance.now() - queueWaitStart);
+        const mapStart = performance.now();
+        return frame.staging.mapAsync(GPUMapMode.READ).then(() => {
+          benchRecord('gpu.mapWaitMs', performance.now() - mapStart);
+          frame.ready = true;
+        });
+      })
       .catch(() => { frame.mapped = false; });
   }
 
@@ -250,6 +282,7 @@ export class PingPongParticles {
   readInto(out: Float32Array): boolean {
     for (const f of this.frames) {
       if (!f.ready) continue;
+      const copyStart = performance.now();
       const src = f.staging.getMappedRange();
       const v = new Float32Array(src);
       for (let i = 0, j = 0; i < this.count; i++, j += 4) {
@@ -260,6 +293,11 @@ export class PingPongParticles {
       f.staging.unmap();
       f.ready = false;
       f.mapped = false;
+      benchRecord('gpu.readbackCopyMs', performance.now() - copyStart);
+      const now = performance.now();
+      if (this.lastReadbackAt > 0) benchRecord('gpu.readbackIntervalMs', now - this.lastReadbackAt);
+      this.lastReadbackAt = now;
+      benchCount('gpu.readbackSamples');
       return true;
     }
     return false;

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Aurora Tree Studio benchmark artifacts",
+  "oneOf": [
+    {"$ref": "#/$defs/run"},
+    {"$ref": "#/$defs/backendSummary"},
+    {"$ref": "#/$defs/combined"}
+  ],
+  "$defs": {
+    "stats": {
+      "type": "object",
+      "properties": {
+        "count": {"type": "integer", "minimum": 0},
+        "p50": {"type": ["number", "null"]},
+        "p95": {"type": ["number", "null"]},
+        "p99": {"type": ["number", "null"]},
+        "max": {"type": ["number", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "run": {
+      "type": "object",
+      "required": ["schemaVersion", "benchmark", "revision", "environment", "frameTimeMs", "fps", "longTasks", "errors"],
+      "properties": {
+        "schemaVersion": {"type": "string"},
+        "benchmark": {"type": "object"},
+        "revision": {"type": "object"},
+        "buildArtifacts": {"type": ["object", "null"]},
+        "environment": {"type": "object"},
+        "scene": {"type": "object"},
+        "frameTimeMs": {"$ref": "#/$defs/stats"},
+        "frameTimeByMinute": {"type": "array", "items": {"type": "object"}},
+        "heapSamplesByMinute": {"type": "array", "items": {"type": "object"}},
+        "fps": {"type": "object"},
+        "longTasks": {"type": "object"},
+        "appDiagnostics": {"type": ["object", "null"]},
+        "errors": {"type": "object"}
+      },
+      "additionalProperties": true
+    },
+    "backendSummary": {
+      "type": "object",
+      "required": ["schemaVersion", "summary", "medianAcrossRuns", "runs"],
+      "properties": {
+        "schemaVersion": {"type": "string"},
+        "summary": {"type": "object"},
+        "medianAcrossRuns": {"type": "object"},
+        "runs": {"type": "array", "items": {"$ref": "#/$defs/run"}}
+      },
+      "additionalProperties": true
+    },
+    "combined": {
+      "type": "object",
+      "required": ["schemaVersion", "createdAt", "comparable", "backends"],
+      "properties": {
+        "schemaVersion": {"type": "string"},
+        "createdAt": {"type": "string", "format": "date-time"},
+        "comparable": {"type": "boolean"},
+        "warning": {"type": ["string", "null"]},
+        "backends": {"type": "object"}
+      },
+      "additionalProperties": true
+    }
+  }
+}
