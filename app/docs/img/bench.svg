@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="250" viewBox="0 0 760 250" role="img" aria-label="P99 frame time comparison">
+  <rect x="0.5" y="0.5" width="759" height="249" rx="14" fill="#0b1220" stroke="#1f2a44"/>
+  <text x="24" y="38" fill="#e6edf3" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="19" font-weight="700">P99 frame time — lower is better</text>
+  <text x="24" y="62" fill="#8b98b0" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12.5">Intel UHD iGPU · 1440×900 · DPR 1 · 26,000 particles · 3 × 30 s · same machine</text>
+
+  <text x="24" y="104" fill="#c9d4e5" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12.5">WebGPU + readback</text>
+  <rect x="176" y="90" width="330" height="20" rx="6" fill="#ff7b72" opacity="0.9"/>
+  <text x="518" y="105" fill="#ffb0aa" font-family="Consolas, monospace" font-size="13">44.4 ms</text>
+
+  <text x="24" y="150" fill="#c9d4e5" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12.5">WebGL2 shaders</text>
+  <rect x="176" y="136" width="247" height="20" rx="6" fill="#79c0ff" opacity="0.9"/>
+  <text x="435" y="151" fill="#9fd0ff" font-family="Consolas, monospace" font-size="13">33.2 ms</text>
+
+  <text x="24" y="196" fill="#c9d4e5" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12.5">FBO GPGPU (zero readback)</text>
+  <rect x="176" y="182" width="167" height="20" rx="6" fill="#3fb950" opacity="0.9"/>
+  <text x="355" y="197" fill="#7ee787" font-family="Consolas, monospace" font-size="13">22.5 ms</text>
+
+  <text x="24" y="230" fill="#8b98b0" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11.5">>33 ms frames: 4.33% → 0.47% → 0.25%. V3 PoC is opt-in via ?backend=fbo, not the default yet.</text>
+</svg>
