@@ -1415,6 +1415,7 @@ function camStat(msg, warn) {
 
 function camPanel(on) {
   $('camPanel').classList.toggle('show', on);
+  document.body.classList.toggle('cam-on', on);
   if (on) $('camPanel').style.display = 'block';
   else setTimeout(() => { if (!HANDS.running) $('camPanel').style.display = 'none'; }, 520);
 }
