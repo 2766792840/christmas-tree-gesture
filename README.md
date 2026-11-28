@@ -33,7 +33,7 @@
 ## 🎬 先看八秒
 
 <p align="center">
-  <img src="docs/screenshots/demo.gif" alt="鼠标绕树搅动力场，粒子被拖着走又弹回去" width="720">
+  <img src="docs/screenshots/demo.gif?v=2" alt="鼠标绕树搅动力场，粒子被拖着走又弹回去" width="720">
 </p>
 
 <p align="center"><sub>鼠标绕一圈，粒子被力场拖着走，松手后自己弹回树的形状 —— 这段是真机录屏，不是剪辑特效。</sub></p>
